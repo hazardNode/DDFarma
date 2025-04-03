@@ -1,17 +1,15 @@
-{% extends "../base.html" %}
-{% load widget_tweaks %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>
+{% extends "base.html" %}
 
-{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product - {{ block.super }}{% endblock %}
+{% block title %}
+{% if object %}Edit {{ object }} - {% else %}Create New Record - {% endif %}{{ block.super }}
+{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product</h2>
-    
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">
+        {% if object %}Edit {{ object }}{% else %}Create New Record{% endif %}
+    </h2>
+
     <form method="post">
         {% csrf_token %}
         <div class="grid grid-cols-1 gap-6">
@@ -24,13 +22,13 @@
                 {% endif %}
             </div>
             {% endfor %}
-            
+
             <div class="flex justify-end space-x-4">
-                <button type="submit" 
+                <button type="submit"
                         class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    {% if form.instance.pk %}Update{% else %}Create{% endif %}
+                    {% if object %}Update{% else %}Create{% endif %}
                 </button>
-                <a href="{% url 'product_list' %}" 
+                <a href="{% url 'category_list' %}"
                    class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Cancel
                 </a>
@@ -38,9 +36,4 @@
         </div>
     </form>
 </div>
-{% endblock %}</title>
-</head>
-<body>
-
-</body>
-</html>
+{% endblock %}

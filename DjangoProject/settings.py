@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     'django_extensions',
     'widget_tweaks',
     'core',
@@ -50,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'DjangoProject.urls'
@@ -131,3 +136,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+
+AUTH_USER_MODEL = 'core.User'
+SITE_ID = 1
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+]
+
+# Email Configuration (For minimal email functionality)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Sends emails to the console (for development)
+
+# Allauth Settings
+ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Use email for authentication
+ACCOUNT_EMAIL_REQUIRED = True  # Require email during account
+ACCOUNT_USERNAME_REQUIRED = False  # Disable username (use email only)
+ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Minimal email verification for now
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Allow email confirmation via GET request
+LOGIN_REDIRECT_URL = '/products'  # Redirect after login
+LOGOUT_REDIRECT_URL = '/products'  # Redirect after logout

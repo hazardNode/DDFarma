@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Supplement Store{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-blue-500 to-green-400 text-white py-20">
+    <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-5xl font-bold mb-4">Your Health, Our Priority</h1>
+        <p class="text-xl mb-8">
+            Discover the best dietary supplements to boost your energy, improve immunity, 
+            and enhance your overall well-being. We offer science-backed formulations 
+            tailored to your lifestyle needs.
+        </p>
+        <a href="{% url 'shop' %}"
+           class="bg-white text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition">
+            Explore Products
+        </a>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-2xl font-semibold mb-4">Premium Quality</h3>
+            <p class="text-gray-600">
+                Our supplements are manufactured in FDA-approved facilities 
+                using only the finest ingredients sourced globally.
+            </p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-2xl font-semibold mb-4">Expert Formulations</h3>
+            <p class="text-gray-600">
+                Developed by nutritionists and healthcare professionals 
+                to ensure optimal bioavailability and effectiveness.
+            </p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-2xl font-semibold mb-4">Personalized Support</h3>
+            <p class="text-gray-600">
+                Get expert advice from our nutrition team to find the 
+                perfect supplement regimen for your unique needs.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Image Placeholder Section -->
+<section class="py-16 bg-gray-100">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="h-96 bg-gray-300 rounded-lg flex items-center justify-center">
+            <span class="text-2xl text-gray-500">Product Image Placeholder</span>
+        </div>
+        <div class="h-96 bg-gray-300 rounded-lg flex items-center justify-center">
+            <span class="text-2xl text-gray-500">Customer Testimonials Placeholder</span>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-16">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        
+        <div id="faq" data-accordion="open">
+            <!-- Question 1 -->
+            <h3>
+                <button type="button" class="flex items-center justify-between w-full p-5 font-medium text-left text-gray-900 bg-white border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white" data-accordion-target="#faq-content-1" aria-expanded="true" aria-controls="faq-content-1">
+                    <span>What types of supplements do you offer?</span>
+                    <svg data-accordion-icon class="w-6 h-6 rotate-180 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </h3>
+            <div id="faq-content-1" class="p-5 border border-b-0 border-gray-200 dark:border-gray-700" aria-labelledby="faq-content-1">
+                <p class="text-gray-600 dark:text-gray-400">
+                    We offer a wide range of supplements including vitamins, minerals, 
+                    protein powders, herbal extracts, and specialty formulas for 
+                    immune support, cognitive health, and more.
+                </p>
+            </div>
+
+            <!-- Question 2 -->
+            <h3>
+                <button type="button" class="flex items-center justify-between w-full p-5 font-medium text-left text-gray-900 bg-white border border-b-0 border-gray-200 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white" data-accordion-target="#faq-content-2" aria-expanded="false" aria-controls="faq-content-2">
+                    <span>Are your products third-party tested?</span>
+                    <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </h3>
+            <div id="faq-content-2" class="hidden p-5 border border-b-0 border-gray-200 dark:border-gray-700" aria-labelledby="faq-content-2">
+                <p class="text-gray-600 dark:text-gray-400">
+                    Yes, all our products undergo rigorous third-party testing for 
+                    potency, purity, and contaminants. You can find the test results 
+                    on each product page.
+                </p>
+            </div>
+
+            <!-- Question 3 -->
+            <h3>
+                <button type="button" class="flex items-center justify-between w-full p-5 font-medium text-left text-gray-900 bg-white border border-gray-200 rounded-b-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white" data-accordion-target="#faq-content-3" aria-expanded="false" aria-controls="faq-content-3">
+                    <span>Do you offer subscriptions?</span>
+                    <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </h3>
+            <div id="faq-content-3" class="hidden p-5 border border-gray-200 dark:border-gray-700" aria-labelledby="faq-content-3">
+                <p class="text-gray-600 dark:text-gray-400">
+                    Absolutely! We offer flexible subscription plans with 
+                    discounts up to 20%. You can manage your subscription 
+                    anytime through your account dashboard.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
