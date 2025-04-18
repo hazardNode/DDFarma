@@ -1,5 +1,6 @@
 # core/forms.py
 from django import forms
+from allauth.account.forms import SignupForm
 from core.models import Product, Supplier, Category, User
 
 
@@ -50,5 +51,3 @@ class UserForm(forms.ModelForm):
         if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("This email is already in use.")
         return email
-
-

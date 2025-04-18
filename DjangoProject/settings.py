@@ -157,5 +157,4 @@ ACCOUNT_EMAIL_REQUIRED = True  # Require email during account
 ACCOUNT_USERNAME_REQUIRED = False  # Disable username (use email only)
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Minimal email verification for now
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Allow email confirmation via GET request
-LOGIN_REDIRECT_URL = '/products'  # Redirect after login
-LOGOUT_REDIRECT_URL = '/products'  # Redirect after logout
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None

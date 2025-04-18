@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Emails - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Emails</h2>
+
+    <!-- Existing Emails -->
+    {% if user.emailaddress_set.all %}
+    <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Current Emails</h3>
+        <ul class="space-y-2">
+            {% for email in user.emailaddress_set.all %}
+            <li class="flex justify-between items-center p-3 border rounded-md">
+                <div>
+                    <span class="font-medium">{{ email.email }}</span>
+                    {% if email.primary %}<span class="text-sm text-green-500 ml-2">Primary</span>{% endif %}
+                    {% if email.verified %}<span class="text-sm text-green-500 ml-2">Verified</span>{% else %}<span class="text-sm text-yellow-500 ml-2">Unverified</span>{% endif %}
+                </div>
+                <div class="space-x-2">
+                    {% if not email.primary %}
+                    <a href="{% url 'account_primary_email' email.id %}"
+                       class="text-sm text-blue-600 hover:text-blue-800">Make Primary</a>
+                    {% endif %}
+                    {% if not email.verified %}
+                    <a href="{% url 'account_email_verification_sent' %}"
+                       class="text-sm text-blue-600 hover:text-blue-800">Resend Verification</a>
+                    {% endif %}
+                    <!-- Delete Form -->
+                    <form action="{% url 'account_email' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ email.email }}">
+                        <input type="hidden" name="action_delete" value="1">
+                        <button type="submit"
+                                class="text-sm text-red-600 hover:text-red-800 focus:outline-none">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Add New Email Form -->
+    <form method="post" action="{% url 'account_email' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="id_email" class="block text-sm font-medium text-gray-700">Add New Email</label>
+            <input type="email" name="email" id="id_email" required
+                   class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        </div>
+        <button type="submit"
+                class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Add Email
+        </button>
+    </form>
+</div>
+{% endblock %}
