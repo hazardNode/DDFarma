@@ -1,5 +1,5 @@
 # core/models.py
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -27,12 +27,16 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class User(AbstractBaseUser):
+# Add this to your models.py User class:
+
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)  # Important for admin access
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -41,6 +45,12 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}".strip() or self.email
+
+    def get_short_name(self):
+        return self.first_name or self.email
 
 # core/models.py (continued)
 class Category(models.Model):
@@ -69,8 +79,8 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-    def __str__(self):
-        return f"{self.payment_method} Payment for Order {self.order.id}"
+    '''def __str__(self):
+        return f"{self.payment_method} Payment for Order {self.order.id}"'''
 
 class ShippingMethod(models.Model):
     name = models.CharField(max_length=100)

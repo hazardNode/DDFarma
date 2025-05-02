@@ -1,0 +1,210 @@
+/* Custom admin styling */
+#content-main .module {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #e6ecf5;
+}
+
+#content-main .module h2 {
+    background-color: #edf2f7;
+    font-weight: 500;
+    padding: 15px;
+    margin: 0;
+    border-bottom: 1px solid #d9e2ec;
+    color: #3a506b;
+}
+
+/* Table styling */
+#result_list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#result_list thead th {
+    background-color: #f0f5fa;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #4a5568;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#result_list tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#result_list tbody tr:hover {
+    background-color: #ebf5ff;
+}
+
+#result_list tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+#result_list td {
+    padding: 16px;
+}
+
+/* Action buttons */
+.addlink, .changelink, .deletelink {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-right: 5px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.addlink {
+    background-color: #38b2ac;
+    color: white !important;
+}
+
+.changelink {
+    background-color: #4299e1;
+    color: white !important;
+}
+
+.deletelink {
+    background-color: #e53e3e;
+    color: white !important;
+}
+
+/* Object tools (top right buttons) */
+.object-tools {
+    margin-bottom: 15px;
+}
+
+.object-tools a {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #3182ce;
+    color: white !important;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.object-tools a:hover {
+    background-color: #2b6cb0;
+}
+
+/* Status badges */
+.true-icon, .false-icon {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.true-icon {
+    background-color: #e6fffa;
+    color: #2c7a7b;
+}
+
+.false-icon {
+    background-color: #fff5f5;
+    color: #c53030;
+}
+
+/* Form styling */
+.form-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.form-row label {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.submit-row {
+    background-color: #f7fafc;
+    padding: 15px;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Dashboard styling */
+.dashboard .module table {
+    width: 100%;
+}
+
+.dashboard .module table th {
+    width: 100%;
+    background-color: #edf2f7;
+    color: #4a5568;
+}
+
+.dashboard .module table td {
+    white-space: nowrap;
+}
+
+/* Improve header spacing and font */
+#content h1 {
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+/* Paginator styling */
+.paginator {
+    margin: 0;
+    padding: 15px;
+    background-color: #edf2f7;
+    border-top: 1px solid #e2e8f0;
+    text-align: right;
+}
+
+.paginator .this-page {
+    display: inline-block;
+    padding: 4px 10px;
+    background-color: #4299e1;
+    color: white;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.paginator a:not(.this-page) {
+    display: inline-block;
+    padding: 4px 10px;
+    color: #3182ce;
+    text-decoration: none;
+}
+
+.paginator a:hover:not(.this-page) {
+    background-color: #e2e8f0;
+    border-radius: 4px;
+}
+
+/* Ensure all sidebar icons have the same width and are centered */
+.sidebar .nav-sidebar .nav-link i {
+    width: 1.8rem ;
+    min-width: 1.8rem ;
+    text-align: center ;
+    margin-right: 0.75rem ;
+    display: inline-block ;
+    vertical-align: middle ;
+}
+
+/* In collapsed sidebar, center the icons completely */
+.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-link i {
+    width: 20% ;
+    margin-right: 0 ;
+    text-align: center ;
+}
+
+/* Optional: fix padding on nav links for better alignment */
+.sidebar .nav-sidebar .nav-link {
+    display: flex ;
+    align-items: center ;
+    padding: 0.5rem 1rem ;
+}
