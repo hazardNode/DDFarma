@@ -10,10 +10,23 @@
     <ul class="space-y-4">
         {% for order in orders %}
         <li class="p-4 border border-gray-200 rounded-md">
-            <p><strong>Order ID:</strong> {{ order.id }}</p>
-            <p><strong>Date:</strong> {{ order.order_date }}</p>
-            <p><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
-            <p><strong>Status:</strong> {{ order.status }}</p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <p><strong>Order ID:</strong> {{ order.id }}</p>
+                    <p><strong>Date:</strong> {{ order.order_date }}</p>
+                    <p><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+                    <p><strong>Status:</strong> {{ order.status }}</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <a href="{% url 'user_download_receipt' order.id %}"
+                       class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md">
+                        <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                        </svg>
+                        Receipt
+                    </a>
+                </div>
+            </div>
         </li>
         {% endfor %}
     </ul>

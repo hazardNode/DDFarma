@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Your Shopping Cart - {{ block.super }}{% endblock %}
+
+{% block content %}
+
+<!-- Cart Section -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">Shopping Cart</h1>
+
+    <div id="cart-container">
+        {% if cart|length > 0 %}
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <!-- Cart Items Table -->
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Product
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Unit Price
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Quantity
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Subtotal
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="cart-items">
+                        {% for item in cart %}
+                        <tr id="cart-item-{{ item.product.id }}" data-product-id="{{ item.product.id }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-16 w-16">
+                                        {% if item.product.image %}
+                                        <img class="h-16 w-16 object-cover rounded" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                        {% else %}
+                                        <img class="h-16 w-16 object-cover rounded" src="https://via.placeholder.com/150" alt="{{ item.product.name }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-4">
+                                        <a href="{% url 'product_detail' item.product.id %}" class="text-lg font-medium text-gray-900 hover:text-blue-600">
+                                            {{ item.product.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-lg font-medium text-gray-900">${{ item.price }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="custom-number-input h-10 w-32">
+                                    <div class="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1">
+                                        <button type="button" class="quantity-btn-dec bg-gray-200 text-gray-600 hover:text-gray-700 hover:bg-gray-300 h-full w-20 rounded-l cursor-pointer">
+                                            <span class="m-auto text-2xl font-thin">−</span>
+                                        </button>
+                                        <input type="number" class="cart-quantity outline-none focus:outline-none text-center w-full bg-gray-100 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center text-gray-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value="{{ item.quantity }}" min="0" max="{{ item.product.stock_quantity }}">
+                                        <button type="button" class="quantity-btn-inc bg-gray-200 text-gray-600 hover:text-gray-700 hover:bg-gray-300 h-full w-20 rounded-r cursor-pointer">
+                                            <span class="m-auto text-2xl font-thin">+</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-lg font-bold text-gray-900 item-subtotal">${{ item.total_price }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button type="button" class="remove-item text-red-600 hover:text-red-800">
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Cart Summary -->
+                <div id="cart-totals" class="bg-gray-50 px-6 py-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-xl font-semibold text-gray-900">Total:</span>
+                            <span id="cart-total" class="ml-2 text-2xl font-bold text-green-600">${{ cart.get_total_price }}</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <a href="{% url 'shop' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Continue Shopping
+                            </a>
+                            <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Proceed to Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-16 bg-white shadow rounded-lg" id="empty-cart">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <h3 class="mt-2 text-lg font-medium text-gray-900">Your cart is empty</h3>
+                <p class="mt-1 text-sm text-gray-500">Start shopping to add products to your cart.</p>
+                <div class="mt-6">
+                    <a href="{% url 'shop' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Go to Shop
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Notification Container -->
+<div id="notification" class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
+    Cart updated successfully!
+</div>
+
+<script>
+$(document).ready(function() {
+    // Function to update cart
+        function updateCart(productId, quantity, action) {
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Send AJAX request
+ $.ajax({
+            url: '{% url "cart_update_ajax" %}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                'product_id': productId,
+                'quantity': quantity,
+                'action': action
+            }),
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-CSRFToken', csrftoken);
+            },
+            success: function(response) {
+                if (response.success) {
+                    console.log("Cart updated successfully:", response.cart);
+                    updateCartUI(response.cart);
+                    showNotification('Cart updated successfully!');
+                }
+            },
+            error: function(error) {
+                console.error('Error:', error);
+                showNotification('Error updating cart', 'error');
+            }
+        });
+    }
+
+    // Function to update cart UI
+    function updateCartUI(cartData) {
+        // Update cart total
+        $('#cart-total').text('$' + cartData.total_price.toFixed(2));
+
+        // Update cart count in header
+        $('#cart-count').text(cartData.total_items);
+        if (cartData.total_items > 0) {
+            $('#cart-count').removeClass('hidden');
+        } else {
+            $('#cart-count').addClass('hidden');
+        }
+
+        // If cart is empty, show empty cart message
+        if (cartData.total_items === 0) {
+            $('#cart-container').html(`
+                <div class="text-center py-16 bg-white shadow rounded-lg" id="empty-cart">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-lg font-medium text-gray-900">Your cart is empty</h3>
+                    <p class="mt-1 text-sm text-gray-500">Start shopping to add products to your cart.</p>
+                    <div class="mt-6">
+                        <a href="/shop/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Go to Shop
+                        </a>
+                    </div>
+                </div>
+            `);
+            return;
+        }
+
+        // Update each cart item
+        $.each(cartData.items, function(index, item) {
+            const $row = $('#cart-item-' + item.id);
+
+            // If the row exists, update it
+            if ($row.length) {
+                $row.find('.cart-quantity').val(item.quantity);
+                $row.find('.item-subtotal').text('$' + item.total_price.toFixed(2));
+            }
+        });
+
+        // Remove items that are no longer in the cart
+        $('#cart-items tr').each(function() {
+            const productId = $(this).data('product-id');
+            let found = false;
+
+            $.each(cartData.items, function(index, item) {
+                if (item.id === productId) {
+                    found = true;
+                    return false; // Break the loop
+                }
+            });
+
+            if (!found) {
+                $(this).remove();
+            }
+        });
+    }
+
+    // Function to show notification
+    function showNotification(message, type = 'success') {
+        const $notification = $('#notification');
+        $notification.text(message);
+
+        if (type === 'error') {
+            $notification.removeClass('bg-green-500').addClass('bg-red-500');
+        } else {
+            $notification.removeClass('bg-red-500').addClass('bg-green-500');
+        }
+
+        $notification.css('opacity', '1');
+
+        setTimeout(function() {
+            $notification.css('opacity', '0');
+        }, 3000);
+    }
+
+    // Event handlers for quantity buttons
+    $(document).on('click', '.quantity-btn-dec', function() {
+        const $row = $(this).closest('tr');
+        const productId = $row.data('product-id');
+        const $input = $row.find('.cart-quantity');
+        let value = parseInt($input.val());
+
+        if (value > 0) {
+            value--;
+            $input.val(value);
+
+            if (value === 0) {
+                updateCart(productId, value, 'remove');
+            } else {
+                updateCart(productId, value, 'update');
+            }
+        }
+    });
+
+    $(document).on('click', '.quantity-btn-inc', function() {
+        const $row = $(this).closest('tr');
+        const productId = $row.data('product-id');
+        const $input = $row.find('.cart-quantity');
+        let value = parseInt($input.val());
+        const max = parseInt($input.attr('max'));
+
+        if (value < max) {
+            value++;
+            $input.val(value);
+            updateCart(productId, value, 'update');
+        }
+    });
+
+    // Event handler for quantity input change
+    $(document).on('change', '.cart-quantity', function() {
+        const $row = $(this).closest('tr');
+        const productId = $row.data('product-id');
+        let value = parseInt($(this).val());
+        const max = parseInt($(this).attr('max'));
+
+        // Validate value
+        if (isNaN(value) || value < 0) {
+            value = 0;
+        } else if (value > max) {
+            value = max;
+        }
+
+        // Update input value
+        $(this).val(value);
+
+        if (value === 0) {
+            updateCart(productId, value, 'remove');
+        } else {
+            updateCart(productId, value, 'update');
+        }
+    });
+
+    // Event handler for remove button
+    $(document).on('click', '.remove-item', function() {
+        const $row = $(this).closest('tr');
+        const productId = $row.data('product-id');
+        updateCart(productId, 0, 'remove');
+    });
+});
+</script>
+{% endblock %}

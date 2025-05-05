@@ -75,6 +75,7 @@ class Product(models.Model):
     sku = models.CharField(max_length=20, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -146,3 +147,38 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+
+# Add to core/models.py
+class Receipt(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='receipt')
+    receipt_number = models.CharField(max_length=50, unique=True)
+    issue_date = models.DateTimeField(auto_now_add=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    billing_name = models.CharField(max_length=255)
+    billing_address = models.TextField()
+    billing_city = models.CharField(max_length=100)
+    billing_province = models.CharField(max_length=100)
+    billing_postal_code = models.CharField(max_length=5)
+    payment_method = models.CharField(max_length=50)
+    payment_transaction_id = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"Receipt #{self.receipt_number} for Order #{self.order.id}"
+
+    def generate_receipt_number(self):
+        """Generate a unique receipt number"""
+        import datetime
+        import uuid
+        today = datetime.date.today()
+        prefix = f"REC-{today.year}{today.month:02d}"
+        random_suffix = str(uuid.uuid4()).split('-')[0].upper()
+        return f"{prefix}-{random_suffix}"
+
+    def save(self, *args, **kwargs):
+        # Generate receipt number if not provided
+        if not self.receipt_number:
+            self.receipt_number = self.generate_receipt_number()
+        super().save(*args, **kwargs)

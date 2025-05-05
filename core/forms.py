@@ -13,7 +13,8 @@ class ProductForm(forms.ModelForm):
             'category',
             'stock_quantity',
             'sku',
-            'is_active'
+            'is_active',
+            'image'
         ]
         widgets = {
             'sku': forms.TextInput(attrs={'placeholder': 'e.g. INTOL-001'}),

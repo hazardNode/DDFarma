@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+
+    <!-- Product Details Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-2 lg:gap-x-8">
+            <!-- Product Image -->
+            <div class="lg:max-w-lg lg:self-end">
+                <div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                             class="w-full h-full object-center object-cover">
+                    {% else %}
+                        <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
+                             class="w-full h-full object-center object-cover">
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="mt-10 lg:mt-0 lg:col-start-2 lg:row-span-2 lg:self-center">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ product.name }}</h1>
+                    <div class="mt-3">
+                        <h2 class="sr-only">Product information</h2>
+                        <p class="text-3xl text-gray-900">${{ product.price }}</p>
+                    </div>
+                </div>
+
+                <!-- Product Description -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-900">Description</h3>
+                    <div class="mt-4 prose prose-sm text-gray-500">
+                        <p>{{ product.description|default:"No description available." }}</p>
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="mt-8 border-t border-gray-200 pt-8">
+                    <h3 class="text-lg font-medium text-gray-900">Product Details</h3>
+                    <div class="mt-4 prose prose-sm text-gray-500">
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>SKU: {{ product.sku }}</li>
+                            <li>Category: {{ product.category.name }}</li>
+                            <li>Stock: {% if product.stock_quantity > 0 %}In Stock ({{ product.stock_quantity }}
+                                available){% else %}Out of Stock{% endif %}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Form -->
+                <div class="mt-10">
+                    <div class="flex items-center mb-6">
+                        <label for="quantity" class="mr-4 text-gray-700">Quantity:</label>
+                        <div class="custom-number-input h-10 w-32">
+                            <div class="flex flex-row h-10 w-full rounded-lg relative bg-transparent mt-1">
+                                <button type="button" id="decrement-btn"
+                                        class="bg-gray-200 text-gray-600 hover:text-gray-700 hover:bg-gray-300 h-full w-20 rounded-l cursor-pointer">
+                                    <span class="m-auto text-2xl font-thin">−</span>
+                                </button>
+                                <input type="number" id="product-quantity"
+                                       class="outline-none focus:outline-none text-center w-full bg-gray-100 font-semibold text-md hover:text-black focus:text-black md:text-base cursor-default flex items-center text-gray-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                       min="1" max="{{ product.stock_quantity }}" value="1"/>
+                                <button type="button" id="increment-btn"
+                                        class="bg-gray-200 text-gray-600 hover:text-gray-700 hover:bg-gray-300 h-full w-20 rounded-r cursor-pointer">
+                                    <span class="m-auto text-2xl font-thin">+</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="add-to-cart-btn" {% if product.stock_quantity <= 0 %}disabled{% endif %}
+                            class="w-full bg-blue-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 {% if product.stock_quantity <= 0 %}opacity-50 cursor-not-allowed{% endif %}">
+                        {% if product.stock_quantity > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Container -->
+        <div id="notification"
+             class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
+            Added to cart!
+        </div>
+
+        <!-- Related Products Section -->
+        <div class="mt-16 pb-12 border-t border-gray-200 pt-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Related Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for related_product in related_products %}
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                        {% if related_product.image %}
+                            <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}"
+                                 class="w-full h-40 object-cover">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x200" alt="{{ related_product.name }}"
+                                 class="w-full h-40 object-cover">
+                        {% endif %}
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ related_product.name }}</h3>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">${{ related_product.price }}</span>
+                                <a href="{% url 'product_detail' related_product.id %}"
+                                   class="text-blue-600 hover:text-blue-800">View</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Quantity buttons functionality
+            const $quantityInput = $('#product-quantity');
+            const maxQuantity = parseInt($quantityInput.attr('max'));
+
+            $('#decrement-btn').click(function () {
+                let value = parseInt($quantityInput.val());
+                if (value > 1) {
+                    $quantityInput.val(value - 1);
+                }
+            });
+
+            $('#increment-btn').click(function () {
+                let value = parseInt($quantityInput.val());
+                if (value < maxQuantity) {
+                    $quantityInput.val(value + 1);
+                }
+            });
+
+            // Add to cart AJAX functionality
+            $('#add-to-cart-btn').click(function () {
+                const quantity = $('#product-quantity').val();
+                const productId = {{ product.id }};
+
+                // Get CSRF token from cookie
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                const csrftoken = getCookie('csrftoken');
+
+                // Send AJAX request
+                $.ajax({
+                    url: '{% url "cart_update_ajax" %}',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        'product_id': productId,
+                        'quantity': quantity,
+                        'action': 'add'
+                    }),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update cart count in header
+                            $('#cart-count').text(response.cart.total_items);
+                            if (response.cart.total_items > 0) {
+                                $('#cart-count').removeClass('hidden');
+                            }
+
+                            // Show notification
+                            showNotification(quantity + ' × {{ product.name }} added to cart!');
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                        showNotification('Error adding product to cart', 'error');
+                    }
+                });
+            });
+
+            // Function to show notification
+            function showNotification(message, type = 'success') {
+                const $notification = $('#notification');
+                $notification.text(message);
+
+                if (type === 'error') {
+                    $notification.removeClass('bg-green-500').addClass('bg-red-500');
+                } else {
+                    $notification.removeClass('bg-red-500').addClass('bg-green-500');
+                }
+
+                $notification.css('opacity', '1');
+
+                setTimeout(function () {
+                    $notification.css('opacity', '0');
+                }, 3000);
+            }
+        });
+    </script>
+{% endblock %}

@@ -9,3 +9,7 @@ def user_role(request):
     return {
         'user_role': role
     }
+from .cart import Cart
+
+def cart(request):
+    return {'cart': Cart(request)}

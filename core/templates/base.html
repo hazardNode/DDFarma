@@ -7,120 +7,125 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.4/flowbite.min.css" rel="stylesheet" />
+    <!-- Add this in the head section of your base.html -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.6"
+            integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
+            crossorigin="anonymous"></script>
+    <!-- Add this right after loading the HTMX script -->
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.4/flowbite.min.css" rel="stylesheet"/>
     {% load static %}
     <link rel="icon" type="image/x-icon" href="{% static 'images/logo.png' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50 overflow-y-scroll">
-    <!-- Navigation Bar -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <!-- Branding -->
-                <div class="flex items-center">
-                    <a href="/" class="flex-shrink-0 flex items-center text-2xl font-bold text-blue-600">
-                        DDFarma
-                    </a>
-                </div>
+<!-- Navigation Bar -->
+<nav class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <!-- Branding -->
+            <div class="flex items-center">
+                <a href="/" class="flex-shrink-0 flex items-center text-2xl font-bold text-blue-600">
+                    DDFarma
+                </a>
+            </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden sm:flex sm:items-center sm:space-x-8">
-                    <a href="{% url 'shop' %}"
-                       class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                        Shop
-                    </a>
+            <!-- Navigation Links -->
+            <div class="hidden sm:flex sm:items-center sm:space-x-8">
+                <a href="{% url 'shop' %}"
+                   class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Shop
+                </a>
 
-                    {% if user.is_authenticated %}
-                        {% if user.role.role_name == 'ADMIN' %}
+                {% if user.is_authenticated %}
+                    {% if user.role.role_name == 'ADMIN' %}
                         <!-- Admin Links -->
                         <a href="{% url 'management_dashboard' %}"
                            class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Management
                         </a>
-                        {% endif %}
-
-                        <!-- Client Links (available to all authenticated users) -->
-                        <a href="{% url 'order_history' %}"
-                           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            My Orders
-                        </a>
-                        <div class="relative inline-block text-left">
-                            <button type="button" id="account-menu-button" aria-expanded="false" aria-haspopup="true"
-                                   class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                Account
-                                <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <div id="account-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-10">
-                                <a href="{% url 'account_logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    Logout
-                                </a>
-                                <form id="logout-form" method="post" action="{% url 'account_logout' %}" style="display: none;">
-                                    {% csrf_token %}
-                                </form>
-                            </div>
-                        </div>
-                    {% else %}
-                        <!-- Unauthenticated Links -->
-                        <a href="{% url 'account_login' %}"
-                           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Login
-                        </a>
-                        <a href="{% url 'account_signup' %}"
-                           class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Sign Up
-                        </a>
                     {% endif %}
-                </div>
+
+                    <!-- Client Links (available to all authenticated users) -->
+                    <a href="{% url 'account_dashboard' %}"
+                       class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        Profile
+                    </a>
+                {% else %}
+                    <!-- Unauthenticated Links -->
+                    <a href="{% url 'account_login' %}"
+                       class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{% url 'account_signup' %}"
+                       class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        Sign Up
+                    </a>
+                {% endif %}
+                <a href="{% url 'cart_detail' %}"
+                   class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900">
+                    <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count"
+                          class="ml-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 {% if cart|length == 0 %}hidden{% endif %}">
+                    {{ cart|length }}
+                    </span>
+                </a>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        {% if messages %}
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+    {% if messages %}
         <div class="mb-4">
             {% for message in messages %}
-            <div class="p-4 mb-4 rounded-lg {% if message.tags %}bg-{{ message.tags }}-100 text-{{ message.tags }}-700{% else %}bg-blue-100 text-blue-700{% endif %}" role="alert">
-                {{ message }}
-            </div>
+                <div class="p-4 mb-4 rounded-lg {% if message.tags %}bg-{{ message.tags }}-100 text-{{ message.tags }}-700{% else %}bg-blue-100 text-blue-700{% endif %}"
+                     role="alert">
+                    {{ message }}
+                </div>
             {% endfor %}
         </div>
-        {% endif %}
+    {% endif %}
 
-        {% block content %}{% endblock %}
-    </main>
+    {% block content %}{% endblock %}
+</main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">&copy; 2023 Supplement Store. All rights reserved.</p>
-        </div>
-    </footer>
+<!-- Footer -->
+<footer class="bg-white border-t border-gray-200">
+    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <p class="text-center text-gray-500 text-sm">&copy; 2023 Supplement Store. All rights reserved.</p>
+    </div>
+</footer>
 
-    {% block extra_js %}{% endblock %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.4/flowbite.min.js"></script>
-    <script>
-        // Toggle the account dropdown menu
-        const accountButton = document.getElementById('account-menu-button');
-        const accountMenu = document.getElementById('account-menu');
+{% block extra_js %}{% endblock %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.4/flowbite.min.js"></script>
+<script>
+    // Toggle the account dropdown menu
+    const accountButton = document.getElementById('account-menu-button');
+    const accountMenu = document.getElementById('account-menu');
 
-        if (accountButton) {
-            accountButton.addEventListener('click', () => {
-                accountMenu.classList.toggle('hidden');
-            });
+    if (accountButton) {
+        accountButton.addEventListener('click', () => {
+            accountMenu.classList.toggle('hidden');
+        });
 
-            // Close the dropdown when clicking outside
-            document.addEventListener('click', (event) => {
-                if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) {
-                    accountMenu.classList.add('hidden');
-                }
-            });
-        }
-    </script>
+        // Close the dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) {
+                accountMenu.classList.add('hidden');
+            }
+        });
+    }
+</script>
 </body>
 </html>

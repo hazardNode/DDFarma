@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,9 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
     'django.contrib.auth',
-    'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.user_role',
+                'core.context_processors.cart',
             ],
         },
     },
@@ -160,76 +161,5 @@ ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Minimal email verification for now
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Allow email confirmation via GET request
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
-JAZZMIN_SETTINGS = {
-    "site_title": "E-commerce Admin",
-    "site_header": "E-commerce Platform",
-    "site_brand": "E-Shop Admin",
-    "site_logo": None,
-    "login_logo": None,
-    "welcome_sign": "Welcome to the E-commerce Administration",
-    "copyright": "E-commerce Ltd",
-    "search_model": "core.Product",
-    "user_avatar": None,
-
-    # Top Menu items
-    "topmenu_links": [
-        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Products", "url": "admin:core_product_changelist"},
-        {"name": "Orders", "url": "admin:core_order_changelist"},
-        {"name": "Users", "url": "admin:core_user_changelist"},
-    ],
-
-    # UI Tweaks
-    "show_ui_builder": True,
-    "changeform_format": "horizontal_tabs",
-    "custom_css": "css/custom_admin.css",
-
-    # Icons
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "core.User": "fas fa-user-tie",
-        "core.Role": "fas fa-user-tag",
-        "core.Category": "fas fa-tags",
-        "core.Supplier": "fas fa-truck",
-        "core.Product": "fas fa-box-open",
-        "core.ShippingMethod": "fas fa-shipping-fast",
-        "core.Address": "fas fa-map-marker-alt",
-        "core.Order": "fas fa-shopping-cart",
-        "core.OrderItem": "fas fa-clipboard-list",
-        "core.Payment": "fas fa-credit-card",
-    },
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": False,
-    "accent": "accent-primary",
-    "navbar": "navbar-white navbar-light",
-    "no_navbar_border": False,
-    "navbar_fixed": True,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": True,
-    "sidebar": "sidebar-light-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "flatly",
-    "dark_mode_theme": None,
-    "button_classes": {
-        "primary": "btn-outline-primary",
-        "secondary": "btn-outline-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
-}
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'core', 'media')

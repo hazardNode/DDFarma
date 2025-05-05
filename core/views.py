@@ -2,9 +2,18 @@
 from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import resolve
-
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
+from django.contrib import messages
+from .models import Product
+from .cart import Cart
 from core.models import Product, Order, Category, User
 from core.forms import ProductForm, CategoryForm, UserForm
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
 
 def product_list(request):
@@ -13,7 +22,7 @@ def product_list(request):
 
 def product_create(request):
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('product_list')
@@ -24,7 +33,7 @@ def product_create(request):
 def product_update(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES,instance=product)
         if form.is_valid():
             form.save()
             return redirect('product_list')
@@ -130,14 +139,94 @@ def landing_page(request):
 
 def shop(request):
     categories = Category.objects.all()
-    products = Product.objects.filter(is_active=True)
 
     # Organize products by category
     context = {
         'categories': categories,
-        'products_by_category': {
-            category: products.filter(category=category)
-            for category in categories
-        }
     }
     return render(request, 'core/shop.html', context)
+
+
+def product_detail(request, product_id):
+    # Get the product or return 404 if not found
+    product = get_object_or_404(Product, id=product_id)
+
+    # Get related products from the same category, excluding the current product
+    related_products = Product.objects.filter(
+        category=product.category,
+        is_active=True
+    ).exclude(id=product.id)[:4]  # Limit to 4 related products
+
+    context = {
+        'product': product,
+        'related_products': related_products,
+    }
+
+    return render(request, 'product_detail.html', context)
+
+def cart_detail(request):
+    cart = Cart(request)
+    context = {
+        'cart': cart
+    }
+    return render(request, 'cart.html', context)
+
+
+
+def cart_add_htmx(request, product_id):
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    quantity = int(request.POST.get('quantity', 1))
+
+    cart.add(product=product, quantity=quantity, override_quantity=False)
+
+    # For the cart icon count update
+    if request.htmx.trigger_name == "add-to-cart":
+        context = {'cart': cart}
+        return render(request, 'partials/cart_icon.html', context)
+
+    # Redirect non-HTMX requests
+    if not request.htmx:
+        messages.success(request, f'{product.name} added to your cart!')
+        return redirect('cart_detail')
+
+    return HttpResponse(status=204)  # No content needed for some HTMX requests
+
+
+@require_POST
+def cart_update_ajax(request):
+    cart = Cart(request)
+    data = json.loads(request.body)
+
+    product_id = data.get('product_id')
+    action = data.get('action')
+    quantity = int(data.get('quantity', 1))
+
+    product = get_object_or_404(Product, id=product_id)
+
+    if action == 'add':
+        cart.add(product=product, quantity=quantity, override_quantity=False)
+    elif action == 'update':
+        cart.add(product=product, quantity=quantity, override_quantity=True)
+    elif action == 'remove':
+        cart.remove(product)
+
+    cart_data = cart.get_cart_data()
+    return JsonResponse({'success': True, 'cart': cart_data})
+
+
+def get_cart_count(request):
+    cart = Cart(request)
+    return render(request, 'partials/cart_icon.html', {'cart': cart})
+
+
+def cart_remove(request, product_id):
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    cart.remove(product)
+    messages.success(request, f'{product.name} removed from your cart')
+    return redirect('cart_detail')
+
+@login_required
+def account_dashboard(request):
+    return render(request, 'account/account_dashboard.html')

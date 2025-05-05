@@ -11,13 +11,24 @@
         {% if object %}Edit {{ object }}{% else %}Create New Record{% endif %}
     </h2>
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="grid grid-cols-1 gap-6">
             {% for field in form %}
             <div>
                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
-                {{ field|add_class:"mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                {% if field.name == 'image' %}
+                    <div class="mt-1 flex items-center">
+                        {% if object.image %}
+                            <div class="mr-4">
+                                <img src="{{ object.image.url }}" alt="{{ object.name }}" class="h-24 w-24 object-cover rounded">
+                            </div>
+                        {% endif %}
+                        {{ field|add_class:"mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                    </div>
+                {% else %}
+                    {{ field|add_class:"mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                {% endif %}
                 {% if field.errors %}
                 <div class="text-red-500 text-sm mt-1">{{ field.errors }}</div>
                 {% endif %}
@@ -29,7 +40,7 @@
                         class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     {% if object %}Update{% else %}Create{% endif %}
                 </button>
-                <a href="{% url 'category_list' %}"
+                <a href="{% url 'product_list' %}"
                    class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Cancel
                 </a>
