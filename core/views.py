@@ -10,7 +10,7 @@ from django.contrib import messages
 from .models import Product
 from .cart import Cart
 from core.models import Product, Order, Category, User
-from core.forms import ProductForm, CategoryForm, UserForm
+from core.forms import ProductForm, CategoryForm, UserForm, UserProfileForm
 import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -227,6 +227,36 @@ def cart_remove(request, product_id):
     messages.success(request, f'{product.name} removed from your cart')
     return redirect('cart_detail')
 
+
 @login_required
 def account_dashboard(request):
     return render(request, 'account/account_dashboard.html')
+
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+
+        # Update the user's information
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+
+        try:
+            user.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Profile updated successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error updating profile: {str(e)}'
+            })
+
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })

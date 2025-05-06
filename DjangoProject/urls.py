@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from core.views import account_dashboard
+from core.views import account_dashboard, update_profile
 
 
 class CustomSignupView(SignupView):
@@ -22,6 +22,7 @@ urlpatterns = [
 
     path('account/', include('allauth.urls')),
 
+    path('account/update-profile/', update_profile, name='update_profile'),
 
     # Your app's URLs
     path('', include('core.urls')),  # Include your app's URLs at root level
