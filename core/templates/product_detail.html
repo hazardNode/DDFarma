@@ -4,21 +4,48 @@
 
 {% block content %}
 
+    <div class="mb-6">
+            <a href="{% url 'shop' %}" class="text-blue-600 hover:text-blue-800">
+                &larr; Back to Shop
+            </a>
+        </div>
     <!-- Product Details Section -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="lg:grid lg:grid-cols-2 lg:gap-x-8">
             <!-- Product Image -->
             <div class="lg:max-w-lg lg:self-end">
-                <div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                             class="w-full h-full object-center object-cover">
-                    {% else %}
-                        <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
-                             class="w-full h-full object-center object-cover">
-                    {% endif %}
-                </div>
-            </div>
+   <!-- Product Image Section - Now with image carousel -->
+    <!-- Main product image display -->
+    <div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden mb-4">
+        {% if product.images.exists %}
+            {% with primary=product.primary_image %}
+                {% if primary %}
+                    <img id="main-product-image" src="{{ primary.image.url }}" alt="{{ product.name }}"
+                         class="w-full h-full object-center object-cover">
+                {% else %}
+                    <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
+                         class="w-full h-full object-center object-cover">
+                {% endif %}
+            {% endwith %}
+        {% else %}
+            <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
+                 class="w-full h-full object-center object-cover">
+        {% endif %}
+    </div>
+
+    <!-- Image thumbnails - only shown if multiple images exist -->
+    {% if product.images.count > 1 %}
+    <div class="flex overflow-x-auto space-x-2 py-2">
+        {% for img in product.images.all %}
+        <div class="flex-shrink-0 cursor-pointer product-thumbnail {% if img.is_primary %}ring-2 ring-blue-500{% endif %}">
+            <img src="{{ img.image.url }}" alt="{{ product.name }}"
+                 data-full-img="{{ img.image.url }}"
+                 class="h-16 w-16 object-cover rounded-md">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 
             <!-- Product Info -->
             <div class="mt-10 lg:mt-0 lg:col-start-2 lg:row-span-2 lg:self-center">
@@ -204,6 +231,17 @@
                     $notification.css('opacity', '0');
                 }, 3000);
             }
+            $('.product-thumbnail').click(function() {
+            // Get the full image URL from the data attribute
+            const fullImageUrl = $(this).find('img').data('full-img');
+
+            // Update the main product image
+            $('#main-product-image').attr('src', fullImageUrl);
+
+            // Update active state
+            $('.product-thumbnail').removeClass('ring-2 ring-blue-500');
+            $(this).addClass('ring-2 ring-blue-500');
+        });
         });
     </script>
 {% endblock %}

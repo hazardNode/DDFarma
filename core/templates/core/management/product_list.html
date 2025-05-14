@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Product List - {{ block.super }}{% endblock %}
+{% block title %}Product Management - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="p-6">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
-            <a href="{% url 'product_create' %}" 
+            <a href="{% url 'product_create' %}"
                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
                 New Product
             </a>
         </div>
-        
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -38,8 +38,8 @@
                     {% for product in products %}
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="h-12 w-12 object-cover rounded">
+                            {% if product.primary_image %}
+                                <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="h-12 w-12 object-cover rounded">
                             {% else %}
                                 <div class="h-12 w-12 bg-gray-200 rounded flex items-center justify-center">
                                     <span class="text-gray-500 text-xs">No Image</span>

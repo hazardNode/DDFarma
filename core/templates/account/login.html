@@ -5,6 +5,17 @@
 {% block content %}
 <div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">Login</h2>
+
+    <!-- Display form-wide errors -->
+    {% if form.errors %}
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+        <p class="text-sm text-red-600 font-medium">Please correct the errors below:</p>
+        {% for error in form.non_field_errors %}
+        <p class="text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <form method="post" action="{% url 'account_login' %}">
         {% csrf_token %}
         <div class="space-y-4">
@@ -12,15 +23,37 @@
             <div>
                 <label for="id_login" class="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" name="login" id="id_login" required
-                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm {% if form.login.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-md">
+                {% if form.login.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.login.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
 
             <!-- Password Field -->
             <div>
                 <label for="id_password" class="block text-sm font-medium text-gray-700">Password</label>
                 <input type="password" name="password" id="id_password" required
-                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                       class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm {% if form.password.errors %}border-red-300{% else %}border-gray-300{% endif %} rounded-md">
+                {% if form.password.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.password.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
+
+            <!-- Remember Me Checkbox (optional) -->
+            {% if form.remember %}
+            <div class="flex items-center">
+                <input type="checkbox" name="remember" id="id_remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="id_remember" class="ml-2 block text-sm text-gray-700">Remember Me</label>
+            </div>
+            {% endif %}
 
             <!-- Forgot Password Link -->
             <div class="flex justify-end">

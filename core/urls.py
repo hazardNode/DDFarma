@@ -11,6 +11,8 @@ urlpatterns = [
     path('management/products/new/', views.product_create, name='product_create'),
     path('management/products/<int:pk>/edit/', views.product_update, name='product_update'),
     path('management/products/<int:pk>/delete/', views.product_delete, name='product_delete'),
+    path('management/products/<int:pk>/set-primary/<int:image_id>/', views.set_primary_image, name='set_primary_image'),
+    path('management/products/<int:pk>/delete-image/<int:image_id>/', views.delete_image, name='delete_image'),
 
     # Categories
     path('management/categories/', views.category_list, name='category_list'),
@@ -36,7 +38,6 @@ urlpatterns = [
 
     # Cart URLs
     path('cart/', views.cart_detail, name='cart_detail'),
-    path('cart/add-htmx/<int:product_id>/', views.cart_add_htmx, name='cart_add_htmx'),
     path('cart/update-ajax/', views.cart_update_ajax, name='cart_update_ajax'),
     path('cart/count/', views.get_cart_count, name='get_cart_count'),
     path('cart/remove/<int:product_id>/', views.cart_remove, name='cart_remove'),

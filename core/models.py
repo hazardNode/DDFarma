@@ -66,7 +66,6 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
-
 class Product(models.Model):
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -75,13 +74,52 @@ class Product(models.Model):
     sku = models.CharField(max_length=20, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
-    image = models.ImageField(upload_to='products/', null=True, blank=True)
 
     def __str__(self):
         return self.name
 
+    @property
+    def primary_image(self):
+        try:
+            # Try to get the primary image
+            primary_image = self.images.filter(is_primary=True).first()
+
+            # If a primary image exists, return it
+            if primary_image:
+                return primary_image
+
+            # Otherwise, return the first image (if any)
+            return self.images.first()
+        except Exception:
+            # If any error occurs, return None
+            return None
+
     '''def __str__(self):
         return f"{self.payment_method} Payment for Order {self.order.id}"'''
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='products/')
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_primary', 'created_at']
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
+
+    def save(self, *args, **kwargs):
+        # If this is marked as primary, unmark all other primary images for this product
+        if self.is_primary:
+            ProductImage.objects.filter(product=self.product, is_primary=True).update(is_primary=False)
+        # If this is the first image for the product, make it primary
+        elif not ProductImage.objects.filter(product=self.product).exists():
+            self.is_primary = True
+        super().save(*args, **kwargs)
+
+
+
 
 class ShippingMethod(models.Model):
     name = models.CharField(max_length=100)

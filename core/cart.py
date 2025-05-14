@@ -16,12 +16,43 @@ class Cart:
         Add a product to the cart or update its quantity.
         """
         product_id = str(product.id)
+
+        # Get image URL - direct approach
+        image_url = None
+        try:
+            # First try to get a primary image
+            primary_image = None
+            if hasattr(product, 'images'):
+                primary_image = product.images.filter(is_primary=True).first()
+
+            if primary_image and hasattr(primary_image, 'image') and primary_image.image:
+                image_url = primary_image.image.url
+            else:
+                # Try to get the first image
+                first_image = None
+                if hasattr(product, 'images'):
+                    first_image = product.images.first()
+
+                if first_image and hasattr(first_image, 'image') and first_image.image:
+                    image_url = first_image.image.url
+                # Fall back to old image field
+                elif hasattr(product, 'image') and product.image:
+                    image_url = product.image.url
+        except Exception as e:
+            print(f"Error getting product image: {e}")
+            image_url = None
+
         if product_id not in self.cart:
             self.cart[product_id] = {
                 'quantity': 0,
                 'price': str(product.price),
-                'name': product.name
+                'name': product.name,
+                'image_url': image_url
             }
+        elif image_url and 'image_url' not in self.cart[product_id]:
+            # Update existing cart items with image if missing
+            self.cart[product_id]['image_url'] = image_url
+
         if override_quantity:
             self.cart[product_id]['quantity'] = quantity
         else:
@@ -48,7 +79,10 @@ class Cart:
         product_ids = self.cart.keys()
         # Get the product objects and add them to the cart
         from .models import Product
-        products = Product.objects.filter(id__in=product_ids)
+
+        # Use prefetch_related to load related images efficiently
+        products = Product.objects.filter(id__in=product_ids).prefetch_related('images')
+
         cart = self.cart.copy()
 
         for product in products:
@@ -78,19 +112,30 @@ class Cart:
         from .models import Product
 
         product_ids = self.cart.keys()
-        products = {str(p.id): p for p in Product.objects.filter(id__in=product_ids)}
+        # Load products with related images
+        products = Product.objects.filter(id__in=product_ids).prefetch_related('images')
+        products_dict = {str(p.id): p for p in products}
 
         items = []
         for key, item in self.cart.items():
-            product = products.get(key)
+            product = products_dict.get(key)
             if product:
+                # Get primary image URL safely
+                primary_image_url = None
+                try:
+                    primary_image = product.primary_image
+                    if primary_image and hasattr(primary_image, 'url'):
+                        primary_image_url = primary_image.url
+                except (AttributeError, ValueError):
+                    pass
+
                 items.append({
                     'id': product.id,
                     'name': product.name,
                     'price': float(item['price']),
                     'quantity': item['quantity'],
                     'total_price': float(item['price']) * item['quantity'],
-                    'image': product.image.url if product.image else None,
+                    'image': primary_image_url,
                     'stock': product.stock_quantity
                 })
 
