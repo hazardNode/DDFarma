@@ -5,47 +5,47 @@
 {% block content %}
 
     <div class="mb-6">
-            <a href="{% url 'shop' %}" class="text-blue-600 hover:text-blue-800">
-                &larr; Back to Shop
-            </a>
-        </div>
+        <a href="{% url 'shop' %}" class="text-blue-600 hover:text-blue-800">
+            &larr; Back to Shop
+        </a>
+    </div>
     <!-- Product Details Section -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="lg:grid lg:grid-cols-2 lg:gap-x-8">
             <!-- Product Image -->
             <div class="lg:max-w-lg lg:self-end">
-   <!-- Product Image Section - Now with image carousel -->
-    <!-- Main product image display -->
-    <div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden mb-4">
-        {% if product.images.exists %}
-            {% with primary=product.primary_image %}
-                {% if primary %}
-                    <img id="main-product-image" src="{{ primary.image.url }}" alt="{{ product.name }}"
-                         class="w-full h-full object-center object-cover">
-                {% else %}
-                    <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
-                         class="w-full h-full object-center object-cover">
-                {% endif %}
-            {% endwith %}
-        {% else %}
-            <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
-                 class="w-full h-full object-center object-cover">
-        {% endif %}
-    </div>
+                <!-- Product Image Section - Now with image carousel -->
+                <!-- Main product image display -->
+                <div class="aspect-w-1 aspect-h-1 rounded-lg overflow-hidden mb-4">
+                    {% if product.images.exists %}
+                        {% with primary=product.primary_image %}
+                            {% if primary %}
+                                <img id="main-product-image" src="{{ primary.image.url }}" alt="{{ product.name }}"
+                                     class="w-full h-full object-center object-cover">
+                            {% else %}
+                                <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
+                                     class="w-full h-full object-center object-cover">
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <img src="https://via.placeholder.com/600x600" alt="{{ product.name }}"
+                             class="w-full h-full object-center object-cover">
+                    {% endif %}
+                </div>
 
-    <!-- Image thumbnails - only shown if multiple images exist -->
-    {% if product.images.count > 1 %}
-    <div class="flex overflow-x-auto space-x-2 py-2">
-        {% for img in product.images.all %}
-        <div class="flex-shrink-0 cursor-pointer product-thumbnail {% if img.is_primary %}ring-2 ring-blue-500{% endif %}">
-            <img src="{{ img.image.url }}" alt="{{ product.name }}"
-                 data-full-img="{{ img.image.url }}"
-                 class="h-16 w-16 object-cover rounded-md">
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-</div>
+                <!-- Image thumbnails - only shown if multiple images exist -->
+                {% if product.images.count > 1 %}
+                    <div class="flex overflow-x-auto space-x-2 py-2">
+                        {% for img in product.images.all %}
+                            <div class="flex-shrink-0 cursor-pointer product-thumbnail {% if img.is_primary %}ring-2 ring-blue-500{% endif %}">
+                                <img src="{{ img.image.url }}" alt="{{ product.name }}"
+                                     data-full-img="{{ img.image.url }}"
+                                     class="h-16 w-16 object-cover rounded-md">
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
 
             <!-- Product Info -->
             <div class="mt-10 lg:mt-0 lg:col-start-2 lg:row-span-2 lg:self-center">
@@ -108,8 +108,19 @@
 
         <!-- Notification Container -->
         <div id="notification"
-             class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
-            Added to cart!
+             class="fixed bottom-4 right-4 z-50 w-72 max-w-full opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out">
+            <div class="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <span id="notification-message" class="block font-medium"></span>
+                    <button type="button" class="ml-2 flex-shrink-0" onclick="dismissNotification()">
+                        <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                  clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Related Products Section -->
@@ -217,31 +228,45 @@
             // Function to show notification
             function showNotification(message, type = 'success') {
                 const $notification = $('#notification');
-                $notification.text(message);
+                const $notificationMessage = $('#notification-message');
 
+                // Set message text
+                $notificationMessage.text(message);
+
+                // Change background color based on type
+                const $notificationBox = $notification.find('div').first();
                 if (type === 'error') {
-                    $notification.removeClass('bg-green-500').addClass('bg-red-500');
+                    $notificationBox.removeClass('bg-green-500').addClass('bg-red-500');
                 } else {
-                    $notification.removeClass('bg-red-500').addClass('bg-green-500');
+                    $notificationBox.removeClass('bg-red-500').addClass('bg-green-500');
                 }
 
-                $notification.css('opacity', '1');
+                // Show notification with animation
+                $notification.removeClass('opacity-0 translate-y-2');
 
+                // Auto-dismiss after 3 seconds
                 setTimeout(function () {
-                    $notification.css('opacity', '0');
+                    dismissNotification();
                 }, 3000);
             }
-            $('.product-thumbnail').click(function() {
-            // Get the full image URL from the data attribute
-            const fullImageUrl = $(this).find('img').data('full-img');
 
-            // Update the main product image
-            $('#main-product-image').attr('src', fullImageUrl);
+// Function to dismiss notification
+            function dismissNotification() {
+                const $notification = $('#notification');
+                $notification.addClass('opacity-0 translate-y-2');
+            }
 
-            // Update active state
-            $('.product-thumbnail').removeClass('ring-2 ring-blue-500');
-            $(this).addClass('ring-2 ring-blue-500');
-        });
+            $('.product-thumbnail').click(function () {
+                // Get the full image URL from the data attribute
+                const fullImageUrl = $(this).find('img').data('full-img');
+
+                // Update the main product image
+                $('#main-product-image').attr('src', fullImageUrl);
+
+                // Update active state
+                $('.product-thumbnail').removeClass('ring-2 ring-blue-500');
+                $(this).addClass('ring-2 ring-blue-500');
+            });
         });
     </script>
 {% endblock %}

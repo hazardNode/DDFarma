@@ -137,10 +137,24 @@
     </div>
 
     <!-- Notification Container -->
+
+    <!-- Notification Container -->
     <div id="notification"
-         class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
-        Cart updated successfully!
+         class="fixed bottom-4 right-4 z-50 w-72 max-w-full opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out">
+        <div class="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between">
+                <span id="notification-message" class="block font-medium">Cart updated successfully!</span>
+                <button type="button" class="ml-2 flex-shrink-0" onclick="dismissNotification()">
+                    <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
+
 
     <script>
         $(document).ready(function () {
@@ -252,22 +266,40 @@
                 });
             }
 
+            function dismissNotification() {
+                const $notification = $('#notification');
+                $notification.addClass('opacity-0 translate-y-2');
+            }
+
             // Function to show notification
             function showNotification(message, type = 'success') {
                 const $notification = $('#notification');
-                $notification.text(message);
+                const $notificationMessage = $('#notification-message');
 
+                // Set message text
+                $notificationMessage.text(message);
+
+                // Change background color based on type
+                const $notificationBox = $notification.find('div').first();
                 if (type === 'error') {
-                    $notification.removeClass('bg-green-500').addClass('bg-red-500');
+                    $notificationBox.removeClass('bg-green-500').addClass('bg-red-500');
                 } else {
-                    $notification.removeClass('bg-red-500').addClass('bg-green-500');
+                    $notificationBox.removeClass('bg-red-500').addClass('bg-green-500');
                 }
 
-                $notification.css('opacity', '1');
+                // Show notification with animation
+                $notification.removeClass('opacity-0 translate-y-2');
 
+                // Auto-dismiss after 3 seconds
                 setTimeout(function () {
-                    $notification.css('opacity', '0');
+                    dismissNotification();
                 }, 3000);
+            }
+
+// Function to dismiss notification
+            function dismissNotification() {
+                const $notification = $('#notification');
+                $notification.addClass('opacity-0 translate-y-2');
             }
 
             // Event handlers for quantity buttons

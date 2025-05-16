@@ -3,10 +3,10 @@ from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import resolve, reverse_lazy
 from django.shortcuts import redirect
-from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from allauth.account.views import ConfirmEmailView
 from django.contrib import messages
 from .models import Product
 from .cart import Cart
@@ -61,7 +61,8 @@ def product_create(request):
         'form': form,
         'image_form': image_form,
         'title': 'Create New Product',
-        'is_create': True  # Flag to indicate this is a create form
+        'is_create': True,  # Flag to indicate this is a create form
+        'is_product_form': True
     })
 
 
@@ -108,7 +109,8 @@ def product_update(request, pk):
         'title': f'Edit {product.name}',
         'image_form': image_form,
         'images': product.images.all(),
-        'is_create': False
+        'is_create': False,
+        'is_product_form': True
     })
 
 def product_delete(request, pk):
@@ -150,7 +152,10 @@ def category_create(request):
             return redirect('category_list')
     else:
         form = CategoryForm()
-    return render(request, 'core/management/form.html', {'form': form})
+    return render(request, 'core/management/form.html', {
+        'form': form,
+        'is_create': False,
+    })
 
 def category_update(request, pk):
     category = get_object_or_404(Category, pk=pk)
@@ -161,7 +166,10 @@ def category_update(request, pk):
             return redirect('category_list')
     else:
         form = CategoryForm(instance=category)
-    return render(request, 'core/management/form.html', {'form': form})
+    return render(request, 'core/management/form.html', {
+        'form': form,
+        'is_create': False,
+    })
 
 def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
@@ -183,7 +191,10 @@ def user_update(request, pk):
             return redirect('user_list')
     else:
         form = UserForm(instance=user)
-    return render(request, 'core/management/form.html', {'form': form})
+    return render(request, 'core/management/form.html', {
+        'form': form,
+        'is_create': False,
+    })
 
 def management_dashboard(request):
     # Get the current URL name
@@ -251,7 +262,6 @@ def product_detail(request, product_id):
         'product': product,
         'related_products': related_products,
     }
-
     return render(request, 'product_detail.html', context)
 
 
@@ -347,3 +357,145 @@ def update_profile(request):
         'message': 'Invalid request method'
     })
 
+@login_required
+def email_management(request):
+    """View for managing user email addresses."""
+    if request.method == 'POST':
+        # Handle adding a new email
+        if 'action_add' in request.POST:
+            email = request.POST.get('email')
+            if email:
+                if EmailAddress.objects.filter(email=email).exists():
+                    messages.error(request, 'This email is already in use.')
+                else:
+                    email_address = EmailAddress.objects.add_email(
+                        request, request.user, email, confirm=True)
+                    messages.success(request,
+                                     f'Verification email sent to {email}.')
+                    return redirect('account_email_verification_sent')
+
+        # Handle setting an email as primary
+        elif 'action_primary' in request.POST:
+            email = request.POST.get('email')
+            emailaddress = EmailAddress.objects.get(
+                user=request.user, email=email)
+            if not emailaddress.verified:
+                messages.error(request,
+                               'You cannot set an unverified email as primary.')
+            else:
+                emailaddress.set_as_primary()
+                messages.success(request,
+                                 f'{email} is now your primary email address.')
+
+        # Handle resending verification email
+        elif 'action_send' in request.POST:
+            email = request.POST.get('email')
+            try:
+                email_address = EmailAddress.objects.get(
+                    user=request.user, email=email)
+                email_address.send_confirmation(request)
+                messages.success(request,
+                                 f'Verification email resent to {email}.')
+                return redirect('account_email_verification_sent')
+            except EmailAddress.DoesNotExist:
+                messages.error(request, 'Email address not found.')
+
+        # Handle removing an email
+        elif 'action_remove' in request.POST:
+            email = request.POST.get('email')
+            try:
+                email_address = EmailAddress.objects.get(
+                    user=request.user, email=email)
+
+                # Check if it's the primary email
+                if email_address.primary:
+                    if EmailAddress.objects.filter(user=request.user).count() > 1:
+                        messages.error(request,
+                                       'Cannot remove primary email. Set another email as primary first.')
+                        return redirect('account_email')
+                    else:
+                        messages.error(request,
+                                       'Cannot remove your only email address.')
+                        return redirect('account_email')
+
+                # Remove the email
+                email_address.delete()
+                messages.success(request, f'{email} has been removed.')
+            except EmailAddress.DoesNotExist:
+                messages.error(request, 'Email address not found.')
+
+    # Get all email addresses for the user
+    emails = EmailAddress.objects.filter(user=request.user)
+
+    return render(request, 'core/account/email.html', {'emails': emails})
+
+
+@login_required
+def email_verification_sent(request):
+    """View shown after a verification email has been sent."""
+    return render(request, 'core/account/email_verification_sent.html')
+
+
+def verify_email(request, uidb64, token):
+    """View to verify an email address from the link in the email."""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        email_address = EmailAddress.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, EmailAddress.DoesNotExist):
+        email_address = None
+
+    if email_address is not None and account_activation_token.check_token(email_address, token):
+        email_address.verified = True
+        email_address.save()
+
+        # If this is the user's only email, make it primary
+        if not EmailAddress.objects.filter(user=email_address.user, primary=True).exists():
+            email_address.set_as_primary()
+
+        context = {
+            'success': True,
+            'email': email_address.email
+        }
+        messages.success(request, f'Your email {email_address.email} has been verified!')
+    else:
+        context = {
+            'success': False,
+            'email': request.user.email if request.user.is_authenticated else ''
+        }
+
+    return render(request, 'core/account/email_verification.html', context)
+
+
+class CustomConfirmEmailView(ConfirmEmailView):
+    """
+    Custom view to handle email confirmation and redirect appropriately
+    """
+
+    def get(self, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            if self.object.email_address.verified:
+                messages.info(self.request, "This email has already been verified.")
+                return redirect("/")
+        except Exception:
+            messages.error(
+                self.request,
+                "This email confirmation link has expired or is invalid. Please request a new confirmation email."
+            )
+            return redirect("landing_page")
+
+        return super().get(*args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        """
+        Handle the POST request after confirmation
+        """
+        # Let the parent class handle the actual confirmation
+        response = super().post(*args, **kwargs)
+
+        # Always redirect to home with a message
+        messages.success(
+            self.request,
+            "Your email address has been confirmed successfully."
+        )
+        return redirect("landing_page")

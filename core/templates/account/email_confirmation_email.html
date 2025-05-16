@@ -1,0 +1,14 @@
+{% autoescape off %}
+Hello {{ user.first_name|default:user.email }},
+
+Please confirm your email address by clicking on the link below:
+
+{{ protocol }}://{{ domain }}{% url 'account_email_verify' uidb64=uid token=token %}
+
+This link will expire in 24 hours.
+
+If you did not request this change, please ignore this email.
+
+Thank you,
+DDFarma Team
+{% endautoescape %}

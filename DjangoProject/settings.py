@@ -12,10 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+environ.Env.read_env(os.path.join(BASE_DIR, 'DjangoProject/../.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -152,14 +155,24 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Email Configuration (For minimal email functionality)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Sends emails to the console (for development)
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f'DDFarma <{env('EMAIL_HOST_USER')}>'
+EMAIL_TIMEOUT = 60
 # Allauth Settings
 ACCOUNT_LOGIN_METHODS = {'email'}  # Use email for authentication
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # Require email during account
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Minimal email verification for now
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Allow email confirmation via GET request
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_EMAIL_SUBJECT_PREFIX = 'DDFarma - '
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_ADAPTER = 'core.adapters.CustomAccountAdapter'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'core', 'media')

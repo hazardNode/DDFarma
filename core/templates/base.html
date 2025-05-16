@@ -81,15 +81,52 @@
 <!-- Main Content -->
 <main class="container mx-auto px-4 py-8">
     {% if messages %}
-        <div class="mb-4">
-            {% for message in messages %}
-                <div class="p-4 mb-4 rounded-lg {% if message.tags %}bg-{{ message.tags }}-100 text-{{ message.tags }}-700{% else %}bg-blue-100 text-blue-700{% endif %}"
-                     role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
+<div id="message-container" class="fixed bottom-4 right-4 z-50 w-72 max-w-full space-y-2">
+    {% for message in messages %}
+    <div class="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out opacity-0 translate-y-2"
+         role="alert"
+         data-message-id="{{ forloop.counter }}">
+        <div class="flex items-center justify-between">
+            <span class="block font-medium">{{ message }}</span>
+            <button type="button" class="ml-2 flex-shrink-0" onclick="dismissMessage(this.closest('[role=alert]'))">
+                <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
         </div>
-    {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+// Show messages with staggered animation
+document.addEventListener('DOMContentLoaded', function() {
+    const messages = document.querySelectorAll('#message-container [role="alert"]');
+    messages.forEach((message, index) => {
+        setTimeout(() => {
+            message.classList.remove('opacity-0', 'translate-y-2');
+        }, 100 * index); // Stagger the animations
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            dismissMessage(message);
+        }, 5000 + (100 * index));
+    });
+});
+
+// Function to dismiss messages with animation
+function dismissMessage(message) {
+    message.classList.add('opacity-0', 'translate-y-2');
+    setTimeout(() => {
+        message.remove();
+        // If no more messages, remove the container
+        if (document.querySelectorAll('#message-container [role="alert"]').length === 0) {
+            document.getElementById('message-container').remove();
+        }
+    }, 300);
+}
+</script>
+{% endif %}
 
     {% block content %}{% endblock %}
 </main>
