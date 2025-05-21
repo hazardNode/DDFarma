@@ -51,7 +51,7 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 overflow-x-hidden font-sans">
+<body class="bg-gray-50 overflow-x-hidden font-sans flex flex-col min-h-screen">
     <!-- Modern Navigation Bar with Gradient -->
     <nav class="sticky top-0 z-50 bg-white/95 navbar-glass border-b border-gray-200 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,9 +204,9 @@
     {% endif %}
 
     <!-- Main Content - NO CONTAINER BY DEFAULT -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <main class="flex-grow">
+    {% block content %}{% endblock %}
+</main>
 
     <!-- Modern Footer with Gradient -->
     <footer class="bg-gradient-to-b from-white to-gray-100 border-t border-gray-200 mt-16">

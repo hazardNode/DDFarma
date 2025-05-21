@@ -2,40 +2,462 @@
 
 {% block title %}Shop - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes floatUp {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0); }
+    }
+
+    @keyframes shine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    /* Hero section styles */
+    .hero-section {
+        position: relative;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        overflow: hidden;
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 20%),
+            radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.15) 0%, transparent 20%);
+    }
+
+    .hero-blob {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        filter: blur(30px);
+    }
+
+    .hero-blob-1 {
+        top: -50px;
+        right: 10%;
+        width: 300px;
+        height: 300px;
+    }
+
+    .hero-blob-2 {
+        bottom: -80px;
+        left: 15%;
+        width: 250px;
+        height: 250px;
+    }
+
+    .hero-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.5;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        animation: fadeIn 1s ease-out;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(4px);
+        border-radius: 9999px;
+        color: white;
+        font-weight: 500;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero-text {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 36rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Category styles */
+    .category-header {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .category-title {
+        position: relative;
+        display: inline-block;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-title::after {
+        content: "";
+        position: absolute;
+        bottom: -0.5rem;
+        left: 0;
+        width: 3rem;
+        height: 0.25rem;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        border-radius: 9999px;
+    }
+
+    .category-title::before {
+        content: "";
+        position: absolute;
+        bottom: -0.5rem;
+        left: 3.5rem;
+        width: 0.5rem;
+        height: 0.25rem;
+        background: #60a5fa;
+        border-radius: 9999px;
+    }
+
+    /* Product card styles */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 2rem;
+    }
+
+    @media (min-width: 640px) {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .product-card {
+        position: relative;
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow:
+            0 10px 25px -5px rgba(0, 0, 0, 0.1),
+            0 5px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow:
+            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    .product-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 0.25rem;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+        background-size: 200% 100%;
+        animation: shine 6s linear infinite;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover::after {
+        opacity: 1;
+    }
+
+    .product-image {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        overflow: hidden;
+    }
+
+    .product-image::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0) 20%);
+        z-index: 1;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .product-content {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .product-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        transition: color 0.3s ease;
+        line-height: 1.4;
+    }
+
+    .product-card:hover .product-title {
+        color: #3b82f6;
+    }
+
+    .product-description {
+        color: #64748b;
+        margin-bottom: 1rem;
+        flex-grow: 1;
+        line-height: 1.5;
+    }
+
+    .product-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+
+    .product-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .product-btn::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 100%);
+        transition: all 0.4s ease;
+        z-index: -1;
+    }
+
+    .product-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+
+    .product-btn:hover::after {
+        left: 100%;
+    }
+
+    .product-btn svg {
+        margin-left: 0.25rem;
+        transition: transform 0.3s ease;
+    }
+
+    .product-btn:hover svg {
+        transform: translateX(3px);
+    }
+
+    .empty-message {
+        text-align: center;
+        color: #64748b;
+        font-style: italic;
+        padding: 2rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px dashed #cbd5e1;
+        grid-column: 1 / -1;
+    }
+
+    /* Animation delays for product cards */
+    .product-card {
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    {% for i in "123456789"|make_list %}
+    .product-card:nth-child({{ i }}) {
+        animation-delay: {{ i|add:"-1" }}00ms;
+    }
+    {% endfor %}
+</style>
+{% endblock %}
+
 {% block content %}
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <div class="hero-blob hero-blob-1"></div>
+            <div class="hero-blob hero-blob-2"></div>
+            <div class="hero-pattern"></div>
+        </div>
+
+        <div class="hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div class="hero-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                Expert Team of Nutritional Scientists
+            </div>
+
+            <h1 class="hero-title">Quality and Precision in Every Formula</h1>
+
+            <p class="hero-text">
+                Our dedicated team of researchers and healthcare professionals develops each supplement with scientific precision.
+                Every product undergoes rigorous testing in FDA-approved facilities, ensuring you receive uncompromising quality
+                for your sensitive health needs.
+            </p>
+
+            <div class="flex flex-wrap gap-4">
+                <a href="/about" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-white bg-white bg-opacity-20 hover:bg-opacity-30 focus:outline-none backdrop-filter backdrop-blur-sm transition duration-300 transform hover:scale-105">
+                    Meet Our Team
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                <a href="#categories" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-md text-blue-700 bg-white hover:bg-gray-50 focus:outline-none transition duration-300 transform hover:scale-105">
+                    Browse Our Products
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 animate-bounce" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </div>
+
+            <div class="mt-8 flex flex-wrap items-center gap-6">
+                <div class="flex items-center">
+                    <div class="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="ml-2 text-white/90 text-sm font-medium">FDA Approved</span>
+                </div>
+
+                <div class="flex items-center">
+                    <div class="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                    </div>
+                    <span class="ml-2 text-white/90 text-sm font-medium">Lab Tested</span>
+                </div>
+
+                <div class="flex items-center">
+                    <div class="bg-white/20 backdrop-blur-sm p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <span class="ml-2 text-white/90 text-sm font-medium">Certified Non-Allergenic</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Product Categories -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div id="categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {% for category in categories %}
-            <div class="mb-12">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ category.name }}</h2>
+            <div class="mb-16 last:mb-0">
+                <div class="category-header">
+                    <h2 class="category-title">{{ category.name }}</h2>
+                </div>
 
                 <!-- Product Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="product-grid">
                     {% for product in category.product_set.all %}
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                            {% with primary=product.primary_image %}
-                                {% if primary and primary.image %}
-                                    <img src="{{ primary.image.url }}" alt="{{ product.name }}"
-                                         class="w-full h-48 object-cover">
-                                {% else %}
-                                    <img src="https://via.placeholder.com/400x300" alt="{{ product.name }}"
-                                         class="w-full h-48 object-cover">
-                                {% endif %}
-                            {% endwith %}
-                            <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ product.name }}</h3>
-                                <p class="text-gray-600 mb-4">{{ product.description|default:""|truncatewords:10 }}</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xl font-bold text-green-600">${{ product.price }}</span>
-                                    <a href="{% url 'product_detail' product.id %}"
-                                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <div class="product-card">
+                            <div class="product-image">
+                                {% with primary=product.primary_image %}
+                                    {% if primary and primary.image %}
+                                        <img src="{{ primary.image.url }}" alt="{{ product.name }}">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/600x400?text=DDFarma" alt="{{ product.name }}">
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="product-content">
+                                <h3 class="product-title">{{ product.name }}</h3>
+                                <p class="product-description">{{ product.description|default:""|truncatewords:15 }}</p>
+                                <div class="product-footer">
+                                    <span class="product-price">${{ product.price }}</span>
+                                    <a href="{% url 'product_detail' product.id %}" class="product-btn">
                                         View Details
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
                                     </a>
                                 </div>
                             </div>
                         </div>
                     {% empty %}
-                        <p class="text-gray-600 col-span-full text-center">No products available in this category</p>
+                        <div class="empty-message">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                            </svg>
+                            <p>No products available in this category</p>
+                        </div>
                     {% endfor %}
                 </div>
             </div>

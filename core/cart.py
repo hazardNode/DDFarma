@@ -110,10 +110,13 @@ class Cart:
         del self.session['cart']
         self.save()
 
+    # Update your Cart class in cart.py to convert Decimal to float for JSON
+    # The get_cart_data method should be updated as follows:
+
     def get_cart_data(self):
-        """Return cart data in a format suitable for AJAX responses, using Decimal for calculations."""
+        """Return cart data in a format suitable for AJAX responses, converting Decimal to float for JSON."""
         from .models import Product
-        from decimal import Decimal  # Make sure import is here too
+        from decimal import Decimal
 
         product_ids = self.cart.keys()
         # Load products with related images
@@ -133,7 +136,7 @@ class Cart:
                 except (AttributeError, ValueError):
                     pass
 
-                # Use Decimal for calculations
+                # Use Decimal for calculations but convert to float for JSON
                 price = Decimal(str(item['price']))
                 quantity = item['quantity']
                 total_price = price * quantity
@@ -141,15 +144,15 @@ class Cart:
                 items.append({
                     'id': product.id,
                     'name': product.name,
-                    'price': price,
+                    'price': float(price),  # Convert to float for JSON
                     'quantity': quantity,
-                    'total_price': total_price,
+                    'total_price': float(total_price),  # Convert to float for JSON
                     'image': primary_image_url,
                     'stock': product.stock_quantity
                 })
 
         return {
             'items': items,
-            'total_price': self.get_total_price(),
+            'total_price': float(self.get_total_price()),  # Convert to float for JSON
             'total_items': len(self)
         }
