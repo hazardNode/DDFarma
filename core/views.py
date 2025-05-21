@@ -2,20 +2,22 @@
 from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import resolve, reverse_lazy
-from django.shortcuts import redirect
-from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from allauth.account.views import ConfirmEmailView
 from django.contrib import messages
-from .models import Product
 from .cart import Cart
-from core.models import Product, Order, Category, User, ProductImage
+from core.models import Product, Order, Category, User, ProductImage, PaymentMethod, Address, ShippingMethod, OrderItem
 from core.forms import ProductForm, CategoryForm, UserForm, UserProfileForm, ProductImageForm, MultipleImageUploadForm
+from .stripe_utils import create_payment_method, delete_payment_method, set_default_payment_method, create_stripe_customer
 import json
+import stripe
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-
+from django.conf import settings
+from django.db import transaction
+from django.urls import reverse
+from decimal import Decimal
 
 def product_list(request):
     products = Product.objects.all()
@@ -499,3 +501,656 @@ class CustomConfirmEmailView(ConfirmEmailView):
             "Your email address has been confirmed successfully."
         )
         return redirect("landing_page")
+
+
+@login_required
+def address_management(request):
+    """View for managing user shipping addresses."""
+    # Get all addresses for the current user
+    addresses = Address.objects.filter(user=request.user)
+
+    return render(request, 'account/address_management.html', {
+        'addresses': addresses
+    })
+
+
+@login_required
+def address_create(request):
+    """Create a new address."""
+    if request.method == 'POST':
+        street = request.POST.get('street')
+        city = request.POST.get('city')
+        province = request.POST.get('province')
+        postal_code = request.POST.get('postal_code')
+        phone = request.POST.get('phone', '')
+        is_default = request.POST.get('is_default') == 'on'
+
+        try:
+            address = Address(
+                user=request.user,
+                street=street,
+                city=city,
+                province=province,
+                postal_code=postal_code,
+                phone=phone,
+                is_default=is_default
+            )
+            address.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Address added successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error adding address: {str(e)}'
+            })
+
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
+
+
+@login_required
+def address_detail(request, address_id):
+    """Get address details."""
+    try:
+        address = Address.objects.get(id=address_id, user=request.user)
+
+        return JsonResponse({
+            'success': True,
+            'address': {
+                'id': address.id,
+                'street': address.street,
+                'city': address.city,
+                'province': address.province,
+                'postal_code': address.postal_code,
+                'phone': address.phone,
+                'is_default': address.is_default
+            }
+        })
+    except Address.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Address not found'
+        })
+
+
+@login_required
+def address_update(request, address_id):
+    """Update an existing address."""
+    try:
+        address = Address.objects.get(id=address_id, user=request.user)
+
+        if request.method == 'POST':
+            address.street = request.POST.get('street')
+            address.city = request.POST.get('city')
+            address.province = request.POST.get('province')
+            address.postal_code = request.POST.get('postal_code')
+            address.phone = request.POST.get('phone', '')
+            address.is_default = request.POST.get('is_default') == 'on'
+
+            address.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Address updated successfully!'
+            })
+
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        })
+    except Address.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Address not found'
+        })
+
+
+@login_required
+def address_delete(request, address_id):
+    """Delete an address."""
+    try:
+        address = Address.objects.get(id=address_id, user=request.user)
+
+        if request.method == 'POST':
+            # Don't allow deleting the default address if it's the only one
+            if address.is_default and Address.objects.filter(user=request.user).count() <= 1:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Cannot delete your only address.'
+                })
+
+            address.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Address deleted successfully!'
+            })
+
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        })
+    except Address.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Address not found'
+        })
+
+
+@login_required
+def address_set_default(request, address_id):
+    """Set an address as the default."""
+    try:
+        address = Address.objects.get(id=address_id, user=request.user)
+
+        if request.method == 'POST':
+            # Update all addresses to not be default
+            Address.objects.filter(user=request.user).update(is_default=False)
+
+            # Set this address as default
+            address.is_default = True
+            address.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Default address updated successfully!'
+            })
+
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request method'
+        })
+    except Address.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Address not found'
+        })
+
+
+@login_required
+def payment_management(request):
+    """View for managing user payment methods."""
+    # Get all payment methods for the current user
+    payment_methods = PaymentMethod.objects.filter(user=request.user)
+
+    context = {
+        'payment_methods': payment_methods,
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+    }
+
+    return render(request, 'account/payment_management.html', context)
+
+
+@login_required
+@require_POST
+def payment_create(request):
+    """Create a new payment method using Stripe."""
+    try:
+        data = json.loads(request.body)
+        payment_method_id = data.get('payment_method_id')
+        payment_method_type = data.get('payment_method_type', 'card')
+        set_default = data.get('set_default', False)
+
+        if not payment_method_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'No payment method ID provided.'
+            })
+
+        # Create the payment method in our database
+        payment_method = create_payment_method(
+            user=request.user,
+            payment_method_id=payment_method_id,
+            payment_method_type=payment_method_type,
+            set_default=set_default
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Payment method added successfully.',
+            'payment_method': {
+                'id': payment_method.id,
+                'display_name': payment_method.display_name,
+                'is_default': payment_method.is_default,
+                'payment_type': payment_method.get_payment_type_display()
+            }
+        })
+
+    except stripe.error.CardError as e:
+        # Since it's a decline, stripe.error.CardError will be caught
+        return JsonResponse({
+            'success': False,
+            'message': f"Card error: {e.error.message}"
+        })
+    except stripe.error.RateLimitError:
+        # Too many requests made to the API too quickly
+        return JsonResponse({
+            'success': False,
+            'message': "Rate limit exceeded. Please try again later."
+        })
+    except stripe.error.InvalidRequestError as e:
+        # Invalid parameters were supplied to Stripe's API
+        return JsonResponse({
+            'success': False,
+            'message': f"Invalid parameters: {e.error.message}"
+        })
+    except stripe.error.AuthenticationError:
+        # Authentication with Stripe's API failed
+        return JsonResponse({
+            'success': False,
+            'message': "Authentication with payment processor failed."
+        })
+    except stripe.error.APIConnectionError:
+        # Network communication with Stripe failed
+        return JsonResponse({
+            'success': False,
+            'message': "Network error. Please try again."
+        })
+    except stripe.error.StripeError:
+        # Display a very generic error to the user
+        return JsonResponse({
+            'success': False,
+            'message': "Something went wrong. Please try again."
+        })
+    except Exception as e:
+        # Something else happened, completely unrelated to Stripe
+        return JsonResponse({
+            'success': False,
+            'message': f"An error occurred: {str(e)}"
+        })
+
+
+@login_required
+@require_POST
+def payment_delete(request, payment_id):
+    """Delete a payment method."""
+    try:
+        payment_method = get_object_or_404(PaymentMethod, id=payment_id, user=request.user)
+
+        # Don't allow deleting the default payment method if it's the only one
+        if payment_method.is_default and PaymentMethod.objects.filter(user=request.user).count() <= 1:
+            return JsonResponse({
+                'success': False,
+                'message': 'Cannot delete your only payment method.'
+            })
+
+        # Delete the payment method
+        delete_payment_method(payment_method)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Payment method deleted successfully.'
+        })
+
+    except stripe.error.StripeError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"Payment processor error: {str(e)}"
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"An error occurred: {str(e)}"
+        })
+
+
+@login_required
+@require_POST
+def payment_set_default(request, payment_id):
+    """Set a payment method as the default."""
+    try:
+        payment_method = get_object_or_404(PaymentMethod, id=payment_id, user=request.user)
+
+        # Set as default
+        set_default_payment_method(payment_method)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Default payment method updated successfully.'
+        })
+
+    except stripe.error.StripeError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"Payment processor error: {str(e)}"
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"An error occurred: {str(e)}"
+        })
+
+
+# Initialize Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+@login_required
+def checkout(request):
+    """First step of checkout - selecting addresses and shipping method."""
+    cart = Cart(request)
+
+    # Check if cart is empty
+    if len(cart) == 0:
+        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        return redirect('cart_detail')
+
+    # Get user's addresses
+    addresses = Address.objects.filter(user=request.user)
+    default_address = addresses.filter(is_default=True).first() or addresses.first()
+
+    # Get shipping methods
+    shipping_methods = ShippingMethod.objects.all()
+    default_shipping = shipping_methods.first()  # You might want different logic here
+
+    context = {
+        'cart': cart,
+        'addresses': addresses,
+        'default_address': default_address,
+        'shipping_methods': shipping_methods,
+        'default_shipping': default_shipping,
+        'checkout_step': 1,
+    }
+
+    return render(request, 'checkout/checkout_address.html', context)
+
+
+@login_required
+@require_POST
+def checkout_address_save(request):
+    """Save the selected addresses and shipping method and redirect to payment."""
+    try:
+        data = json.loads(request.body) if request.body else request.POST
+
+        shipping_address_id = data.get('shipping_address')
+        billing_address_id = data.get('billing_address')
+        shipping_method_id = data.get('shipping_method')
+
+        # Validate input
+        if not shipping_address_id or not shipping_method_id:
+            return JsonResponse({
+                'success': False,
+                'message': 'Shipping address and shipping method are required.'
+            })
+
+        # Store in session for later use
+        request.session['checkout'] = {
+            'shipping_address_id': shipping_address_id,
+            'billing_address_id': billing_address_id,
+            'shipping_method_id': shipping_method_id,
+        }
+
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('checkout_payment')
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        })
+
+
+@login_required
+def checkout_payment(request):
+    """Second step of checkout - payment method selection."""
+    cart = Cart(request)
+
+    # Check if cart is empty
+    if len(cart) == 0:
+        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        return redirect('cart_detail')
+
+    # Check if we have the address info
+    checkout_data = request.session.get('checkout', {})
+    if not checkout_data.get('shipping_address_id') or not checkout_data.get('shipping_method_id'):
+        messages.warning(request, "Please select shipping address and method first.")
+        return redirect('checkout')
+
+    # Get address and shipping data
+    shipping_address = get_object_or_404(Address, id=checkout_data['shipping_address_id'], user=request.user)
+    billing_address = None
+    if checkout_data.get('billing_address_id'):
+        billing_address = get_object_or_404(Address, id=checkout_data['billing_address_id'], user=request.user)
+    else:
+        billing_address = shipping_address
+
+    shipping_method = get_object_or_404(ShippingMethod, id=checkout_data['shipping_method_id'])
+
+    # Get user's payment methods
+    payment_methods = PaymentMethod.objects.filter(user=request.user)
+    default_payment = payment_methods.filter(is_default=True).first()
+
+    # Calculate totals
+    cart_total = cart.get_total_price()
+    shipping_cost = shipping_method.cost
+    order_total = cart_total + shipping_cost
+
+    context = {
+        'cart': cart,
+        'shipping_address': shipping_address,
+        'billing_address': billing_address,
+        'shipping_method': shipping_method,
+        'payment_methods': payment_methods,
+        'default_payment': default_payment,
+        'cart_total': cart_total,
+        'shipping_cost': shipping_cost,
+        'order_total': order_total,
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+        'checkout_step': 2,
+    }
+
+    return render(request, 'checkout/checkout_payment.html', context)
+
+
+# Update the create_payment_intent view to handle Decimal conversion properly
+
+@login_required
+@require_POST
+def create_payment_intent(request):
+    """Create a Stripe PaymentIntent and return client secret."""
+    try:
+        data = json.loads(request.body)
+        cart = Cart(request)
+
+        if len(cart) == 0:
+            return JsonResponse({
+                'success': False,
+                'message': 'Your cart is empty.'
+            })
+
+        checkout_data = request.session.get('checkout', {})
+        if not checkout_data.get('shipping_method_id'):
+            return JsonResponse({
+                'success': False,
+                'message': 'Shipping method not selected.'
+            })
+
+        shipping_method = get_object_or_404(ShippingMethod, id=checkout_data['shipping_method_id'])
+
+        # Calculate amount using Decimal for precision
+        cart_total = Decimal(str(cart.get_total_price()))
+        shipping_cost = shipping_method.cost
+        total_amount = cart_total + shipping_cost
+
+        # Convert to cents for Stripe (must be an integer)
+        amount = int(total_amount * 100)
+
+        payment_method_id = data.get('payment_method_id')
+
+        # Get or create customer
+        customer_id = create_stripe_customer(request.user)
+
+        # Create a PaymentIntent
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+            customer=customer_id,
+            payment_method=payment_method_id,
+            confirmation_method='manual',
+            confirm=True,
+            metadata={
+                'user_id': request.user.id,
+                'integration_check': 'accept_a_payment',
+            },
+            receipt_email=request.user.email,
+            use_stripe_sdk=True,
+            return_url=request.build_absolute_uri(reverse('checkout_complete')),
+        )
+
+        # Store payment intent ID in session
+        checkout_data['payment_intent_id'] = intent.id
+        request.session['checkout'] = checkout_data
+
+        return JsonResponse({
+            'success': True,
+            'requires_action': intent.status == 'requires_action',
+            'payment_intent_client_secret': intent.client_secret,
+            'redirect_url': reverse('checkout_complete')
+        })
+
+    except stripe.error.CardError as e:
+        return JsonResponse({
+            'success': False,
+            'message': e.error.message
+        })
+    except stripe.error.StripeError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"Payment processing error: {str(e)}"
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f"An unexpected error occurred: {str(e)}"
+        })
+
+# Update the checkout_complete view to properly handle Decimal conversions
+# Make sure you have from decimal import Decimal at the top of your file
+
+@login_required
+@transaction.atomic
+def checkout_complete(request):
+    """Final step of checkout - complete the order."""
+    cart = Cart(request)
+
+    # Check if cart is empty
+    if len(cart) == 0:
+        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        return redirect('cart_detail')
+
+    # Get checkout data from session
+    checkout_data = request.session.get('checkout', {})
+    if not checkout_data:
+        messages.warning(request, "Checkout information not found.")
+        return redirect('checkout')
+
+    payment_intent_id = checkout_data.get('payment_intent_id')
+    if not payment_intent_id:
+        messages.warning(request, "Payment information not found.")
+        return redirect('checkout_payment')
+
+    try:
+        # Retrieve payment intent
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+        # Check payment status
+        if payment_intent.status != 'succeeded':
+            messages.error(request, "Payment was not successful. Please try again.")
+            return redirect('checkout_payment')
+
+        # Get address and shipping data
+        shipping_address = get_object_or_404(Address, id=checkout_data['shipping_address_id'], user=request.user)
+        billing_address_id = checkout_data.get('billing_address_id')
+        billing_address = get_object_or_404(Address, id=billing_address_id,
+                                            user=request.user) if billing_address_id else shipping_address
+        shipping_method = get_object_or_404(ShippingMethod, id=checkout_data['shipping_method_id'])
+
+        # Get payment method
+        payment_method = None
+        if payment_intent.payment_method:
+            try:
+                payment_method = PaymentMethod.objects.get(payment_method_id=payment_intent.payment_method)
+            except PaymentMethod.DoesNotExist:
+                pass  # Will be None, that's OK for now
+
+        # Calculate totals - FIXED to handle Decimal conversion
+        cart_total = Decimal(str(cart.get_total_price()))
+        shipping_cost = shipping_method.cost
+        order_total = cart_total + shipping_cost
+
+        # Create order
+        order = Order(
+            user=request.user,
+            shipping_address=shipping_address,
+            billing_address=billing_address,
+            payment_method=payment_method,
+            shipping_method=shipping_method,
+            subtotal=cart_total,
+            shipping_cost=shipping_cost,
+            total_amount=order_total,
+            stripe_payment_intent_id=payment_intent_id,
+            stripe_payment_method_id=payment_intent.payment_method if payment_intent.payment_method else None,
+            status='processing',
+            payment_status='paid'
+        )
+        order.save()
+
+        # Create order items
+        for item in cart:
+            product = item['product']
+
+            # Convert price to Decimal if it's not already
+            if not isinstance(item['price'], Decimal):
+                price = Decimal(str(item['price']))
+            else:
+                price = item['price']
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item['quantity'],
+                price_at_purchase=price
+            )
+
+            # Update product stock
+            product.stock_quantity = max(0, product.stock_quantity - item['quantity'])
+            product.save()
+
+        # Clear cart
+        cart.clear()
+
+        # Clear checkout data
+        if 'checkout' in request.session:
+            del request.session['checkout']
+
+        # Success message
+        messages.success(request, f"Your order #{order.order_number} has been successfully placed!")
+
+        # Redirect to order confirmation
+        return render(request, 'checkout/checkout_success.html', {
+            'order': order
+        })
+
+    except stripe.error.StripeError as e:
+        messages.error(request, f"Payment error: {str(e)}")
+        return redirect('checkout_payment')
+    except Exception as e:
+        messages.error(request, f"An error occurred while processing your order: {str(e)}")
+        return redirect('checkout')
+
+
+@login_required
+def order_confirmation(request, order_id):
+    """Display order confirmation page."""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    return render(request, 'checkout/order_confirmation.html', {
+        'order': order
+    })

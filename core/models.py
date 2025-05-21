@@ -2,6 +2,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Role(models.Model):
@@ -37,6 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Important for admin access
+    stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -141,6 +143,62 @@ class Address(models.Model):
 
     class Meta:
         unique_together = ('user', 'street', 'postal_code')
+# Updated PaymentMethod model for SEPA support
+# Replace the existing PaymentMethod model in models.py
+
+class PaymentMethod(models.Model):
+    PAYMENT_TYPE_CHOICES = [
+        ('card', 'Credit/Debit Card'),
+        ('sepa_debit', 'Bank Account (SEPA)'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_methods')
+    payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPE_CHOICES)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Stripe specific fields
+    payment_method_id = models.CharField(max_length=100, unique=True)
+
+    # Display information (not sensitive data)
+    display_name = models.CharField(max_length=100)  # e.g., "Visa ending in 4242"
+
+    # Additional metadata for display purposes
+    expiry_month = models.CharField(max_length=2, blank=True, null=True)  # MM format
+    expiry_year = models.CharField(max_length=4, blank=True, null=True)  # YYYY format
+    card_brand = models.CharField(max_length=20, blank=True, null=True)  # Visa, Mastercard, etc.
+    last4 = models.CharField(max_length=4, blank=True, null=True)  # Last 4 digits
+
+    # Bank account specific display fields (no sensitive data)
+    bank_name = models.CharField(max_length=100, blank=True, null=True)  # For bank accounts
+
+    def __str__(self):
+        return self.display_name
+
+    def save(self, *args, **kwargs):
+        # If this is marked as default, unmark all other default payment methods for this user
+        if self.is_default:
+            PaymentMethod.objects.filter(user=self.user, is_default=True).update(is_default=False)
+        # If this is the first payment method for the user, make it default
+        elif not PaymentMethod.objects.filter(user=self.user).exists():
+            self.is_default = True
+        super().save(*args, **kwargs)
+
+    # Helper methods to generate display name based on payment type
+    def set_card_details(self, brand, last4, exp_month, exp_year):
+        """Set the display information for a card payment method"""
+        self.card_brand = brand
+        self.last4 = last4
+        self.expiry_month = exp_month
+        self.expiry_year = exp_year
+        self.display_name = f"{brand} ending in {last4}"
+
+    def set_bank_account_details(self, bank_name, last4):
+        """Set the display information for a bank account payment method"""
+        self.bank_name = bank_name
+        self.last4 = last4
+        self.display_name = f"{bank_name} ending in {last4}"
+
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -150,15 +208,95 @@ class Order(models.Model):
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='shipping_orders')
+    billing_address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='billing_orders', null=True,
+                                        blank=True)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Order information
+    order_number = models.CharField(max_length=20, unique=True)
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=50, choices=PAYMENT_STATUS_CHOICES, default='pending')
+
+    # Financial information
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.CASCADE)
+
+    # Stripe payment information
+    stripe_payment_intent_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_payment_method_id = models.CharField(max_length=100, blank=True, null=True)
+
+    # Shipping information
+    shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.SET_NULL, null=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+
+    # Notes
+    customer_notes = models.TextField(blank=True, null=True)
+    internal_notes = models.TextField(blank=True, null=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Order {self.id} by {self.user.email}"
+        return f"Order {self.order_number}"
+
+    def get_absolute_url(self):
+        return reverse('order_detail', args=[self.id])
+
+    def get_total_items(self):
+        return sum(item.quantity for item in self.items.all())
+
+    def generate_order_number(self):
+        """Generate a unique order number."""
+        import datetime
+        import random
+        date_str = datetime.date.today().strftime('%Y%m%d')
+        random_num = random.randint(1000, 9999)
+        return f"ORD-{date_str}-{random_num}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        super().save(*args, **kwargs)
+
+    def calculate_totals(self):
+        """Calculate order totals."""
+        self.subtotal = sum(item.get_cost() for item in self.items.all())
+        # Add shipping cost if not already set
+        if not self.shipping_cost and self.shipping_method:
+            self.shipping_cost = self.shipping_method.cost
+        self.total_amount = self.subtotal + self.shipping_cost
+        self.save()
+
+    def set_paid(self, payment_intent_id=None):
+        """Mark the order as paid."""
+        self.payment_status = 'paid'
+        if payment_intent_id:
+            self.stripe_payment_intent_id = payment_intent_id
+        self.status = 'processing'
+        self.save()
+
+    def mark_as_shipped(self, tracking_number=None):
+        """Mark the order as shipped."""
+        self.status = 'shipped'
+        if tracking_number:
+            self.tracking_number = tracking_number
+        self.save()
+
+
+# You already have an OrderItem model, but make sure it has these fields
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -168,6 +306,8 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
 
+    def get_cost(self):
+        return self.price_at_purchase * self.quantity
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('credit_card', 'Credit Card'),
@@ -185,7 +325,6 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
-
 # Add to core/models.py
 class Receipt(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='receipt')

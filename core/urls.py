@@ -31,6 +31,20 @@ urlpatterns = [
     path('management/users/<int:pk>/edit/', views.user_update, name='user_update'),
     path('account/orders/', views.order_history, name='order_history'),
     path('account/orders/<int:order_id>/receipt/', receipts.download_receipt, name='user_download_receipt'),
+    # Address Management
+    path('account/addresses/', views.address_management, name='address_management'),
+    path('account/addresses/create/', views.address_create, name='address_create'),
+    path('account/addresses/<int:address_id>/', views.address_detail, name='address_detail'),
+    path('account/addresses/<int:address_id>/update/', views.address_update, name='address_update'),
+    path('account/addresses/<int:address_id>/delete/', views.address_delete, name='address_delete'),
+    path('account/addresses/<int:address_id>/default/', views.address_set_default, name='address_set_default'),
+
+    # Payment Management
+    path('account/payments/', views.payment_management, name='payment_management'),
+    path('account/payments/create/', views.payment_create, name='payment_create'),
+    path('account/payments/<int:payment_id>/delete/', views.payment_delete, name='payment_delete'),
+    path('account/payments/<int:payment_id>/default/', views.payment_set_default, name='payment_set_default'),
+
 
     path('', views.landing_page, name='landing_page'),
     path('shop/', views.shop, name='shop'),
@@ -41,5 +55,12 @@ urlpatterns = [
     path('cart/update-ajax/', views.cart_update_ajax, name='cart_update_ajax'),
     path('cart/count/', views.get_cart_count, name='get_cart_count'),
     path('cart/remove/<int:product_id>/', views.cart_remove, name='cart_remove'),
+    # Checkout related URLs
+    path('checkout/', views.checkout, name='checkout'),
+    path('checkout/address-save/', views.checkout_address_save, name='checkout_address_save'),
+    path('checkout/payment/', views.checkout_payment, name='checkout_payment'),
+    path('checkout/create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
+    path('checkout/complete/', views.checkout_complete, name='checkout_complete'),
+    path('orders/<int:order_id>/confirmation/', views.order_confirmation, name='order_confirmation'),
 
 ]

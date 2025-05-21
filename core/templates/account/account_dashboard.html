@@ -1,109 +1,98 @@
-<!-- account_dashboard.html (updated with notifications) -->
+<!-- account_dashboard.html (updated) -->
 {% extends "base.html" %}
 
 {% block title %}Account - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow">
+<div class="max-w-4xl mx-auto mt-8">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">My Account</h2>
 
-    <!-- User Information -->
-    <div class="mb-8">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">User Information</h3>
-        <p class="text-gray-600 mb-3"><strong>Email:</strong> {{ user.email }}</p>
-
-        {% if user.get_full_name %}
-            <p class="text-gray-600"><strong>Name:</strong> {{ user.get_full_name }}</p>
-        {% else %}
-            <p class="text-gray-600 italic">No name provided</p>
-        {% endif %}
-
-        <!-- Edit Profile Form -->
-        <div class="mt-4">
-            <button id="toggleProfileForm" class="text-sm text-blue-600 hover:text-blue-800">
-                Edit Profile
-            </button>
-
-            <form id="profileForm" class="hidden mt-4 space-y-4">
-                {% csrf_token %}
-
-                <div>
-                    <label for="id_first_name" class="block text-sm font-medium text-gray-700">First Name</label>
-                    <input type="text" name="first_name" id="id_first_name" value="{{ user.first_name }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label for="id_last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
-                    <input type="text" name="last_name" id="id_last_name" value="{{ user.last_name }}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <button type="button" id="saveProfile" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Save Changes
-                    </button>
-                    <button type="button" id="cancelEdit" class="ml-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Account Actions -->
-    <div class="space-y-4">
-        <!-- The rest of your existing account actions -->
-        <!-- Order History -->
-        <div>
-            <a href="{% url 'order_history' %}"
-               class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Order History
-            </a>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Left sidebar: Account navigation -->
+        <div class="col-span-1">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-medium text-gray-700 mb-4">Account Menu</h3>
+                <nav class="space-y-2">
+                    <a href="{% url 'account_dashboard' %}"
+                       class="block px-4 py-2 rounded-md text-blue-600 bg-blue-50 font-medium">
+                        Personal Information
+                    </a>
+                    <a href="{% url 'address_management' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Addresses
+                    </a>
+                    <a href="{% url 'payment_management' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Payment Methods
+                    </a>
+                    <a href="{% url 'order_history' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Order History
+                    </a>
+                    <a href="{% url 'account_email' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Email Settings
+                    </a>
+                    <a href="{% url 'account_change_password' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Change Password
+                    </a>
+                    <form method="post" action="{% url 'account_logout' %}" class="mt-4">
+                        {% csrf_token %}
+                        {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                        {% endif %}
+                        <button type="submit" class="w-full text-left px-4 py-2 rounded-md text-red-600 hover:bg-red-50 font-medium">
+                            Sign Out
+                        </button>
+                    </form>
+                </nav>
+            </div>
         </div>
 
-        <!-- Change Email -->
-        <div>
-            <a href="{% url 'account_email' %}"
-               class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Change Email
-            </a>
-        </div>
+        <!-- Right content: Main content area -->
+        <div class="col-span-1 md:col-span-2">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Personal Information</h3>
 
-        <!-- Change Password -->
-        <div>
-            <a href="{% url 'account_change_password' %}"
-               class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Change Password
-            </a>
-        </div>
+                <form id="profileForm">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="id_email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="id_email" value="{{ user.email }}" disabled
+                                class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-500">
+                            <p class="mt-1 text-xs text-gray-500">To change your email, go to Email Settings</p>
+                        </div>
 
-        <!-- Add Payment Method -->
-        <div>
-            <a href="#"
-               class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Add Payment Method
-            </a>
-        </div>
+                        <div>
+                            <label for="id_first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+                            <input type="text" name="first_name" id="id_first_name" value="{{ user.first_name }}"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
 
-        <!-- Logout -->
-        <div>
-            <form method="post" action="{% url 'account_logout' %}">
-                {% csrf_token %}
-                {% if redirect_field_value %}
-                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-                {% endif %}
-                <button type="submit" class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Sign Out
-                </button>
-            </form>
+                        <div>
+                            <label for="id_last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+                            <input type="text" name="last_name" id="id_last_name" value="{{ user.last_name }}"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="button" id="saveProfile"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Notification Element -->
 <div id="notification"
-     class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
+    class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
 </div>
 
 <!-- JavaScript -->
@@ -126,20 +115,7 @@
     }
 
     $(document).ready(function() {
-        const toggleButton = $('#toggleProfileForm');
-        const profileForm = $('#profileForm');
-        const cancelButton = $('#cancelEdit');
         const saveButton = $('#saveProfile');
-
-        toggleButton.on('click', function() {
-            profileForm.toggleClass('hidden');
-            toggleButton.toggleClass('hidden');
-        });
-
-        cancelButton.on('click', function() {
-            profileForm.addClass('hidden');
-            toggleButton.removeClass('hidden');
-        });
 
         saveButton.on('click', function() {
             // Get form data
@@ -157,23 +133,8 @@
                     'csrfmiddlewaretoken': csrfToken
                 },
                 success: function(response) {
-                    // Update the displayed name if successful
                     if (response.success) {
                         showNotification(response.message, 'success');
-
-                        // Update the displayed name on the page
-                        const fullName = (firstName + ' ' + lastName).trim();
-                        if (fullName) {
-                            if ($('.text-gray-600 strong:contains("Name:")').length) {
-                                $('.text-gray-600 strong:contains("Name:")').parent().html('<strong>Name:</strong> ' + fullName);
-                            } else {
-                                $('.text-gray-600.italic').replaceWith('<p class="text-gray-600"><strong>Name:</strong> ' + fullName + '</p>');
-                            }
-                        }
-
-                        // Hide the form
-                        profileForm.addClass('hidden');
-                        toggleButton.removeClass('hidden');
                     } else {
                         showNotification(response.message || 'An error occurred', 'error');
                     }

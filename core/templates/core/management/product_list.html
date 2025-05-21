@@ -2,74 +2,629 @@
 
 {% block title %}Product Management - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shine {
+        from { background-position: -100px; }
+        to { background-position: 200px; }
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+        70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    /* Page styles */
+    .page-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: calc(100vh - 4rem);
+    }
+
+    .header-decoration {
+        position: relative;
+    }
+
+    .header-decoration::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.3));
+        border-radius: 3px;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.05),
+            0 4px 6px -2px rgba(0, 0, 0, 0.03),
+            0 0 0 1px rgba(59, 130, 246, 0.05);
+        overflow: hidden;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .add-button {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        transition: all 0.3s ease;
+    }
+
+    .add-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .add-button::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 70px;
+        height: 200%;
+        background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(25deg);
+        transition: all 0.6s ease;
+    }
+
+    .add-button:hover::after {
+        left: 200%;
+    }
+
+    /* Table styles */
+    .product-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .product-table th {
+        background-color: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #64748b;
+        letter-spacing: 0.05em;
+        padding: 16px 12px;
+        text-align: left;
+    }
+
+    .product-table tr {
+        transition: all 0.2s ease;
+    }
+
+    .product-table tr:hover {
+        background-color: #f1f5f9;
+    }
+
+    .product-table td {
+        padding: 16px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+
+    .product-img {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .product-img:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .no-img {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #0f172a;
+        transition: all 0.2s ease;
+    }
+
+    .product-sku {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .product-price {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .stock-high {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .stock-medium {
+        background-color: #fef9c3;
+        color: #854d0e;
+    }
+
+    .stock-low {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .edit-link {
+        color: #4f46e5;
+        background-color: #eef2ff;
+    }
+
+    .edit-link:hover {
+        background-color: #e0e7ff;
+        color: #4338ca;
+    }
+
+    .delete-link {
+        color: #ef4444;
+        background-color: #fee2e2;
+    }
+
+    .delete-link:hover {
+        background-color: #fecaca;
+        color: #dc2626;
+    }
+
+    /* Row animation */
+    .row-animate {
+        animation: fadeIn 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    {% for i in "123456789"|make_list %}
+    tr:nth-child({{ i }}) {
+        animation-delay: {{ i|add:"-1" }}0ms;
+    }
+    {% endfor %}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
-            <a href="{% url 'product_create' %}"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+<div class="page-container py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <h2 class="text-3xl font-bold header-decoration text-gray-800 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                Product Management
+            </h2>
+
+            <a href="{% url 'product_create' %}" class="add-button flex items-center px-5 py-2.5 text-white font-medium rounded-lg shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
                 New Product
             </a>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Image
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Name
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Stock
-                        </th>
-                        <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">Actions</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for product in products %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if product.primary_image %}
-                                <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="h-12 w-12 object-cover rounded">
-                            {% else %}
-                                <div class="h-12 w-12 bg-gray-200 rounded flex items-center justify-center">
-                                    <span class="text-gray-500 text-xs">No Image</span>
-                                </div>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                            <div class="text-sm text-gray-500">{{ product.sku }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-medium text-gray-900">${{ product.price }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {% if product.stock_quantity > 10 %}bg-green-100 text-green-800{% elif product.stock_quantity > 0 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ product.stock_quantity }} units
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'product_update' product.pk %}" 
-                               class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                            <a href="{% url 'product_delete' product.pk %}" 
-                               class="text-red-600 hover:text-red-900">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="content-card">
+            <div class="overflow-x-auto">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th class="pl-6">Image</th>
+                            <th>Product Details</th>
+                            <th>Price</th>
+                            <th>Inventory</th>
+                            <th class="text-right pr-6">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr class="row-animate">
+                            <td class="pl-6">
+                                {% if product.primary_image %}
+                                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="product-img">
+                                {% else %}
+                                    <div class="no-img">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="product-name">{{ product.name }}</div>
+                                <div class="product-sku">SKU: {{ product.sku }}</div>
+                            </td>
+                            <td>
+                                <div class="product-price">${{ product.price }}</div>
+                            </td>
+                            <td>
+                                <span class="stock-badge {% if product.stock_quantity > 10 %}stock-high{% elif product.stock_quantity > 0 %}stock-medium{% else %}stock-low{% endif %}">
+                                    {% if product.stock_quantity > 10 %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% elif product.stock_quantity > 0 %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    {% endif %}
+                                    {{ product.stock_quantity }} units
+                                </span>
+                            </td>
+                            <!-- Modifications for product_list.html -->
+
+<!-- Replace the existing action links with these new ones -->
+<td class="text-right pr-6">
+    <div class="flex justify-end space-x-2">
+        <a href="{% url 'product_update' product.pk %}" class="action-link edit-link">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            Edit
+        </a>
+        <button
+            class="action-link delete-link product-delete-button"
+            data-id="{{ product.pk }}"
+            data-name="{{ product.name }}"
+            data-sku="{{ product.sku }}"
+            data-price="{{ product.price }}"
+            data-stock="{{ product.stock_quantity }}"
+            data-image="{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}none{% endif %}"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Delete
+        </button>
+    </div>
+</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+    {% comment %}
+This code should be included at the bottom of both product_list.html and category_list.html pages.
+It provides modal dialogs for deleting products and categories without navigating away from the page.
+{% endcomment %}
+
+<!-- Product Delete Modal -->
+<div id="product-delete-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity modal-overlay" aria-hidden="true"></div>
+
+        <!-- Modal positioning trick -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <!-- Modal content -->
+        <div class="relative inline-block align-bottom bg-white rounded-lg p-0 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="modal-content transition-transform duration-300 transform scale-95 opacity-0">
+                <!-- Modal header with warning icon -->
+                <div class="bg-red-50 px-4 py-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Delete Product
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete this product? This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product details -->
+                <div class="bg-white px-4 py-5 sm:px-6">
+                    <div class="product-info space-y-3">
+                        <div class="flex">
+                            <div class="product-image w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mr-4">
+                                <img id="modal-product-image" src="" alt="" class="w-full h-full object-cover hidden">
+                                <div id="modal-no-image" class="text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 id="modal-product-name" class="text-md font-semibold text-gray-900"></h4>
+                                <div class="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">SKU:</span>
+                                        <span id="modal-product-sku" class="ml-1 font-medium text-gray-900"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Price:</span>
+                                        <span id="modal-product-price" class="ml-1 font-medium text-gray-900"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">Stock:</span>
+                                        <span id="modal-product-stock" class="ml-1 font-medium text-gray-900"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <form id="product-delete-form" method="post" action="">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-transform duration-200 hover:scale-105">
+                            Delete
+                        </button>
+                    </form>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cancel-modal transition-all duration-200 hover:-translate-y-1">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Delete Modal -->
+<div id="category-delete-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity modal-overlay" aria-hidden="true"></div>
+
+        <!-- Modal positioning trick -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <!-- Modal content -->
+        <div class="relative inline-block align-bottom bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="modal-content transition-transform duration-300 transform scale-95 opacity-0">
+                <!-- Modal header with warning icon -->
+                <div class="bg-indigo-50 px-4 py-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Delete Category
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete this category? All products in this category will be affected. This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category details -->
+                <div class="bg-white px-4 py-5 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="category-icon flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-500 text-white mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="modal-category-name" class="text-xl font-semibold text-gray-900"></h3>
+                            <p id="modal-category-desc" class="text-sm text-gray-500 mt-1"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <form id="category-delete-form" method="post" action="">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-200 hover:scale-105">
+                            Delete
+                        </button>
+                    </form>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cancel-modal transition-all duration-200 hover:-translate-y-1">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript to the bottom of the page -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ========== PRODUCT DELETE MODAL ==========
+        const productModal = document.getElementById('product-delete-modal');
+        const productModalContent = productModal.querySelector('.modal-content');
+        const productDeleteForm = document.getElementById('product-delete-form');
+        const productDeleteButtons = document.querySelectorAll('.product-delete-button');
+
+        // Product modal information elements
+        const modalProductName = document.getElementById('modal-product-name');
+        const modalProductSku = document.getElementById('modal-product-sku');
+        const modalProductPrice = document.getElementById('modal-product-price');
+        const modalProductStock = document.getElementById('modal-product-stock');
+        const modalProductImage = document.getElementById('modal-product-image');
+        const modalNoImage = document.getElementById('modal-no-image');
+
+        // Show product delete modal
+        productDeleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Get product data from data attributes
+                const productId = this.getAttribute('data-id');
+                const productName = this.getAttribute('data-name');
+                const productSku = this.getAttribute('data-sku');
+                const productPrice = this.getAttribute('data-price');
+                const productStock = this.getAttribute('data-stock');
+                const productImageUrl = this.getAttribute('data-image');
+
+                // Set form action
+                productDeleteForm.action = `/product/${productId}/delete/`;
+
+                // Populate modal with product data
+                modalProductName.textContent = productName;
+                modalProductSku.textContent = productSku;
+                modalProductPrice.textContent = '$' + productPrice;
+                modalProductStock.textContent = productStock + ' units';
+
+                // Handle product image
+                if (productImageUrl && productImageUrl !== 'none') {
+                    modalProductImage.src = productImageUrl;
+                    modalProductImage.classList.remove('hidden');
+                    modalNoImage.classList.add('hidden');
+                } else {
+                    modalProductImage.classList.add('hidden');
+                    modalNoImage.classList.remove('hidden');
+                }
+
+                // Show modal with animation
+                productModal.classList.remove('hidden');
+                // Animate in after a brief delay for the modal setup
+                setTimeout(() => {
+                    productModalContent.classList.remove('scale-95', 'opacity-0');
+                    productModalContent.classList.add('scale-100', 'opacity-100');
+                }, 50);
+            });
+        });
+
+        // ========== CATEGORY DELETE MODAL ==========
+        const categoryModal = document.getElementById('category-delete-modal');
+        const categoryModalContent = categoryModal.querySelector('.modal-content');
+        const categoryDeleteForm = document.getElementById('category-delete-form');
+        const categoryDeleteButtons = document.querySelectorAll('.category-delete-button');
+
+        // Category modal information elements
+        const modalCategoryName = document.getElementById('modal-category-name');
+        const modalCategoryDesc = document.getElementById('modal-category-desc');
+
+        // Show category delete modal
+        categoryDeleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Get category data from data attributes
+                const categoryId = this.getAttribute('data-id');
+                const categoryName = this.getAttribute('data-name');
+                const categoryDesc = this.getAttribute('data-desc') || 'No description available';
+
+                // Set form action
+                categoryDeleteForm.action = `/category/${categoryId}/delete/`;
+
+                // Populate modal with category data
+                modalCategoryName.textContent = categoryName;
+                modalCategoryDesc.textContent = categoryDesc;
+
+                // Show modal with animation
+                categoryModal.classList.remove('hidden');
+                // Animate in after a brief delay for the modal setup
+                setTimeout(() => {
+                    categoryModalContent.classList.remove('scale-95', 'opacity-0');
+                    categoryModalContent.classList.add('scale-100', 'opacity-100');
+                }, 50);
+            });
+        });
+
+        // ========== COMMON MODAL FUNCTIONALITY ==========
+
+        // Close modal when clicking the backdrop or cancel button
+        const modalOverlays = document.querySelectorAll('.modal-overlay');
+        const cancelButtons = document.querySelectorAll('.cancel-modal');
+
+        function closeModals() {
+            // Hide product modal
+            if (!productModal.classList.contains('hidden')) {
+                productModalContent.classList.remove('scale-100', 'opacity-100');
+                productModalContent.classList.add('scale-95', 'opacity-0');
+
+                setTimeout(() => {
+                    productModal.classList.add('hidden');
+                }, 300);
+            }
+
+            // Hide category modal
+            if (!categoryModal.classList.contains('hidden')) {
+                categoryModalContent.classList.remove('scale-100', 'opacity-100');
+                categoryModalContent.classList.add('scale-95', 'opacity-0');
+
+                setTimeout(() => {
+                    categoryModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        modalOverlays.forEach(overlay => {
+            overlay.addEventListener('click', closeModals);
+        });
+
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', closeModals);
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModals();
+            }
+        });
+    });
+</script>
 {% endblock %}

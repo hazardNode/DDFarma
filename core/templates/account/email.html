@@ -1,113 +1,165 @@
+<!-- account_email.html -->
 {% extends "base.html" %}
 
 {% block title %}Manage Emails - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Emails</h2>
+<div class="max-w-4xl mx-auto mt-8">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">My Account</h2>
 
-    {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-            <div class="{% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} p-4 rounded-md mb-2">
-                {{ message }}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Left sidebar: Account navigation -->
+        <div class="col-span-1">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-medium text-gray-700 mb-4">Account Menu</h3>
+                <nav class="space-y-2">
+                    <a href="{% url 'account_dashboard' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Personal Information
+                    </a>
+                    <a href="{% url 'address_management' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Addresses
+                    </a>
+                    <a href="{% url 'payment_management' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Payment Methods
+                    </a>
+                    <a href="{% url 'order_history' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Order History
+                    </a>
+                    <a href="{% url 'account_email' %}"
+                       class="block px-4 py-2 rounded-md text-blue-600 bg-blue-50 font-medium">
+                        Email Settings
+                    </a>
+                    <a href="{% url 'account_change_password' %}"
+                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
+                        Change Password
+                    </a>
+                    <form method="post" action="{% url 'account_logout' %}" class="mt-4">
+                        {% csrf_token %}
+                        {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                        {% endif %}
+                        <button type="submit" class="w-full text-left px-4 py-2 rounded-md text-red-600 hover:bg-red-50 font-medium">
+                            Sign Out
+                        </button>
+                    </form>
+                </nav>
             </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+        </div>
 
-    <!-- Existing Emails -->
-    {% if user.emailaddress_set.all %}
-    <div class="mb-8">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">Current Emails</h3>
-        <ul class="divide-y divide-gray-200">
-            {% for email in user.emailaddress_set.all %}
-            <li class="py-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-900">{{ email.email }}</p>
-                        <div class="mt-1 flex items-center">
-                            {% if email.primary %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">Primary</span>{% endif %}
-                            {% if email.verified %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>{% else %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Unverified</span>{% endif %}
+        <!-- Right content: Main content area -->
+        <div class="col-span-1 md:col-span-2">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">Email Settings</h3>
+
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} p-4 rounded-md mb-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Existing Emails -->
+                {% if user.emailaddress_set.all %}
+                <div class="mb-8">
+                    <h4 class="text-lg font-medium text-gray-700 mb-4">Current Emails</h4>
+                    <ul class="divide-y divide-gray-200">
+                        {% for email in user.emailaddress_set.all %}
+                        <li class="py-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ email.email }}</p>
+                                    <div class="mt-1 flex items-center">
+                                        {% if email.primary %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">Primary</span>{% endif %}
+                                        {% if email.verified %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>{% else %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Unverified</span>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    {% if not email.primary %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ email.email }}">
+                                        <button type="submit" name="action_primary" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                                            Make Primary
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    {% if not email.verified %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ email.email }}">
+                                        <button type="submit" name="action_send" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                                            Resend Verification
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    {% if not email.primary or user.emailaddress_set.count > 1 %}
+                                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ email.email }}">
+                                        <button type="submit" name="action_remove" class="text-sm text-red-600 hover:text-red-800 focus:outline-none">
+                                            Remove
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                You don't have any email addresses configured. Please add one below.
+                            </p>
                         </div>
                     </div>
-                    <div class="flex space-x-2">
-                        {% if not email.primary %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_primary" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
-                                Make Primary
-                            </button>
-                        </form>
-                        {% endif %}
+                </div>
+                {% endif %}
 
-                        {% if not email.verified %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_send" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
-                                Resend Verification
-                            </button>
-                        </form>
-                        {% endif %}
-
-                        {% if not email.primary or user.emailaddress_set.count > 1 %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_remove" class="text-sm text-red-600 hover:text-red-800 focus:outline-none">
-                                Remove
-                            </button>
-                        </form>
-                        {% endif %}
+                <!-- Add New Email Form -->
+                <form method="post" action="{% url 'account_email' %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_email" class="block text-sm font-medium text-gray-700">Add New Email</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                </svg>
+                            </div>
+                            <input type="email" name="email" id="id_email" required
+                                class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                                placeholder="your.email@example.com">
+                        </div>
                     </div>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% else %}
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <p class="text-sm text-yellow-700">
-                    You don't have any email addresses configured. Please add one below.
-                </p>
+
+                    <div>
+                        <button type="submit" name="action_add"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Add Email
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    {% endif %}
-
-    <!-- Add New Email Form -->
-    <form method="post" action="{% url 'account_email' %}" class="space-y-4">
-        {% csrf_token %}
-        <div>
-            <label for="id_email" class="block text-sm font-medium text-gray-700">Add New Email</label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                </div>
-                <input type="email" name="email" id="id_email" required
-                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                    placeholder="your.email@example.com">
-            </div>
-        </div>
-
-        <div>
-            <button type="submit" name="action_add"
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Add Email
-            </button>
-        </div>
-    </form>
 </div>
 {% endblock %}

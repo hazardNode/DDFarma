@@ -1,4 +1,6 @@
 # cart.py
+from decimal import Decimal
+
 class Cart:
     def __init__(self, request):
         """
@@ -100,7 +102,8 @@ class Cart:
         return sum(item['quantity'] for item in self.cart.values())
 
     def get_total_price(self):
-        return sum(float(item['price']) * item['quantity'] for item in self.cart.values())
+        """Calculate total price using Decimal for precision."""
+        return sum(Decimal(str(item['price'])) * item['quantity'] for item in self.cart.values())
 
     def clear(self):
         # Remove cart from session
@@ -108,8 +111,9 @@ class Cart:
         self.save()
 
     def get_cart_data(self):
-        """Return cart data in a format suitable for AJAX responses"""
+        """Return cart data in a format suitable for AJAX responses, using Decimal for calculations."""
         from .models import Product
+        from decimal import Decimal  # Make sure import is here too
 
         product_ids = self.cart.keys()
         # Load products with related images
@@ -129,12 +133,17 @@ class Cart:
                 except (AttributeError, ValueError):
                     pass
 
+                # Use Decimal for calculations
+                price = Decimal(str(item['price']))
+                quantity = item['quantity']
+                total_price = price * quantity
+
                 items.append({
                     'id': product.id,
                     'name': product.name,
-                    'price': float(item['price']),
-                    'quantity': item['quantity'],
-                    'total_price': float(item['price']) * item['quantity'],
+                    'price': price,
+                    'quantity': quantity,
+                    'total_price': total_price,
                     'image': primary_image_url,
                     'stock': product.stock_quantity
                 })
