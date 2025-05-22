@@ -25,10 +25,243 @@
             margin-right: -50vw;
         }
 
-        /* Navbar styles */
-        .navbar-glass {
+        /* Modern Minimalistic Navbar */
+        .navbar-modern {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navbar-modern.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sophisticated Brand with Original Gradient */
+        .brand-modern {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #3b82f6 0%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: all 0.3s ease;
+            background-size: 200% 200%;
+            animation: gradient 8s ease infinite;
+        }
+
+        .brand-modern:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        /* Modern Prominent Navigation Links */
+        .nav-link-modern {
+            position: relative;
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
+            color: #475569;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            background: rgba(248, 250, 252, 0.8);
+            border: 1px solid rgba(226, 232, 240, 0.6);
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .nav-link-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+        }
+
+        .nav-link-modern::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6 0%, #22c55e 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+        }
+
+        .nav-link-modern:hover {
+            color: #1e293b;
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link-modern:hover::before {
+            left: 0;
+        }
+
+        .nav-link-modern:hover::after {
+            width: 80%;
+        }
+
+        /* Refined Cart Button */
+        .cart-button-modern {
+            position: relative;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .cart-button-modern:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .cart-count-modern {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.25rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Modern CTA Button */
+        .cta-button-modern {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.3);
+            border: none;
+            letter-spacing: 0.025em;
+        }
+
+        .cta-button-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        /* Sophisticated Footer */
+        .footer-modern {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            border-top: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+        }
+
+        .footer-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #3b82f6 50%, transparent 100%);
+            opacity: 0.6;
+        }
+
+        .footer-brand-modern {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .footer-section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -0.25rem;
+            left: 0;
+            width: 1.5rem;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+            border-radius: 1px;
+        }
+
+        .footer-link-modern {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+        }
+
+        .footer-link-modern:hover {
+            color: #3b82f6;
+            transform: translateX(4px);
+        }
+
+        .social-button-modern {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .social-button-modern:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.4);
+            border-color: #3b82f6;
+        }
+
+        .footer-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #e2e8f0 20%, #e2e8f0 80%, transparent 100%);
+            margin: 2rem 0 1.5rem;
         }
 
         /* Gradient animations for UI elements */
@@ -47,70 +280,88 @@
         html {
             scroll-behavior: smooth;
         }
+
+        /* Mobile menu improvements */
+        .mobile-menu-modern {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .mobile-nav-link {
+            color: #64748b;
+            font-weight: 500;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .mobile-nav-link:hover {
+            background: rgba(59, 130, 246, 0.05);
+            color: #3b82f6;
+        }
+
+        .mobile-cta-link {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-50 overflow-x-hidden font-sans flex flex-col min-h-screen">
-    <!-- Modern Navigation Bar with Gradient -->
-    <nav class="sticky top-0 z-50 bg-white/95 navbar-glass border-b border-gray-200 shadow-sm transition-all duration-300">
+    <!-- Modern Minimalistic Navigation Bar -->
+    <nav class="navbar-modern sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <!-- Branding -->
+                <!-- Sophisticated Branding -->
                 <div class="flex items-center">
-                    <a href="/" class="flex-shrink-0 flex items-center text-2xl font-bold">
-                        <span class="bg-gradient-to-r from-blue-600 to-green-400 bg-clip-text text-transparent">DDFarma</span>
+                    <a href="/" class="brand-modern">
+                        DDFarma
                     </a>
                 </div>
 
-                <!-- Navigation Links - Desktop -->
-                <div class="hidden sm:flex sm:items-center sm:space-x-6">
-                    <a href="{% url 'shop' %}"
-                       class="relative text-gray-600 hover:text-blue-600 transition-colors duration-200 inline-flex items-center px-2 py-1 text-sm font-medium group">
-                        Shop
-                        <span class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-200"></span>
+                <!-- Clean Navigation Links - Desktop -->
+                <div class="hidden sm:flex sm:items-center sm:space-x-2">
+                    <a href="{% url 'shop' %}" class="nav-link-modern">
+                        Tienda
                     </a>
 
                     {% if user.is_authenticated %}
                         {% if user.role.role_name == 'ADMIN' %}
-                            <!-- Admin Links -->
-                            <a href="{% url 'management_dashboard' %}"
-                               class="relative text-gray-600 hover:text-blue-600 transition-colors duration-200 inline-flex items-center px-2 py-1 text-sm font-medium group">
-                                Management
-                                <span class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-200"></span>
+                            <a href="{% url 'management_dashboard' %}" class="nav-link-modern">
+                                Administración
                             </a>
                         {% endif %}
 
-                        <!-- Client Links (available to all authenticated users) -->
-                        <a href="{% url 'account_dashboard' %}"
-                           class="relative text-gray-600 hover:text-blue-600 transition-colors duration-200 inline-flex items-center px-2 py-1 text-sm font-medium group">
-                            Profile
-                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-200"></span>
+                        <a href="{% url 'account_dashboard' %}" class="nav-link-modern">
+                            Perfil
                         </a>
                     {% else %}
-                        <!-- Unauthenticated Links -->
-                        <a href="{% url 'account_login' %}"
-                           class="relative text-gray-600 hover:text-blue-600 transition-colors duration-200 inline-flex items-center px-2 py-1 text-sm font-medium group">
-                            Login
-                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-200"></span>
+                        <a href="{% url 'account_login' %}" class="nav-link-modern">
+                            Iniciar Sesión
                         </a>
-                        <a href="{% url 'account_signup' %}"
-                           class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-full hover:shadow-lg transition-all duration-200">
-                            Sign Up
+                        <a href="{% url 'account_signup' %}" class="cta-button-modern">
+                            Registrarse
                         </a>
                     {% endif %}
 
-                    <!-- Cart Button -->
-                    <a href="{% url 'cart_detail' %}"
-                       class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-900">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                             xmlns="http://www.w3.org/2000/svg">
+                    <!-- Refined Cart Button -->
+                    <a href="{% url 'cart_detail' %}" class="cart-button-modern ml-4">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        <span id="cart-count"
-                              class="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full {% if cart|length == 0 %}hidden{% endif %}">
-                        {{ cart|length }}
+                        <span id="cart-count" class="cart-count-modern {% if cart|length == 0 %}hidden{% endif %}">
+                            {{ cart|length }}
                         </span>
                     </a>
                 </div>
@@ -126,27 +377,27 @@
             </div>
         </div>
 
-        <!-- Mobile menu, hidden by default -->
-        <div id="mobile-menu" class="sm:hidden hidden">
-            <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-b border-gray-200">
-                <a href="{% url 'shop' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Shop</a>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="sm:hidden hidden mobile-menu-modern">
+            <div class="px-4 pt-4 pb-6 space-y-1">
+                <a href="{% url 'shop' %}" class="mobile-nav-link">Shop</a>
 
                 {% if user.is_authenticated %}
                     {% if user.role.role_name == 'ADMIN' %}
-                        <a href="{% url 'management_dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Management</a>
+                        <a href="{% url 'management_dashboard' %}" class="mobile-nav-link">Management</a>
                     {% endif %}
-                    <a href="{% url 'account_dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Profile</a>
+                    <a href="{% url 'account_dashboard' %}" class="mobile-nav-link">Profile</a>
                 {% else %}
-                    <a href="{% url 'account_login' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Login</a>
-                    <a href="{% url 'account_signup' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700">Sign Up</a>
+                    <a href="{% url 'account_login' %}" class="mobile-nav-link">Login</a>
+                    <a href="{% url 'account_signup' %}" class="mobile-cta-link">Sign Up</a>
                 {% endif %}
 
-                <a href="{% url 'cart_detail' %}" class="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <a href="{% url 'cart_detail' %}" class="mobile-nav-link flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                     Cart
-                    <span id="mobile-cart-count" class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 {% if cart|length == 0 %}hidden{% endif %}">
+                    <span id="mobile-cart-count" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 {% if cart|length == 0 %}hidden{% endif %}">
                         {{ cart|length }}
                     </span>
                 </a>
@@ -208,59 +459,70 @@
     {% block content %}{% endblock %}
 </main>
 
-    <!-- Modern Footer with Gradient -->
-    <footer class="bg-gradient-to-b from-white to-gray-100 border-t border-gray-200 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Column 1: Brand & Copyright -->
-                <div class="space-y-4">
-                    <div class="flex items-center">
-                        <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-400 bg-clip-text text-transparent">DDFarma</span>
+    <!-- Sophisticated Modern Footer -->
+    <footer class="footer-modern mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand Column -->
+                <div class="md:col-span-2 space-y-4">
+                    <div class="footer-brand-modern">
+                        DDFarma
                     </div>
-                    <p class="text-gray-500 text-sm">Specialized supplements for food intolerances and sensitivities.</p>
-                    <p class="text-gray-500 text-sm">&copy; 2025 DDFarma. All rights reserved.</p>
+                    <p class="text-slate-600 text-sm leading-relaxed max-w-md">
+                        Suplementos especializados para intolerancias y sensibilidades alimentarias.
+                        Una vida más sana gracias a una nutrición respaldada por la ciencia.
+                    </p>
+                    <div class="flex space-x-3 pt-2">
+                        <a href="#" class="social-button-modern">
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-button-modern">
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-button-modern">
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Column 2: Quick Links -->
+                <!-- Quick Links Column -->
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Quick Links</h3>
-                    <ul class="space-y-2">
-                        <li><a href="{% url 'shop' %}" class="text-gray-600 hover:text-blue-600 transition-colors">Shop</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-blue-600 transition-colors">About Us</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-blue-600 transition-colors">Contact</a></li>
-                        <li><a href="#" class="text-gray-600 hover:text-blue-600 transition-colors">FAQ</a></li>
+                    <h3 class="footer-section-title">Enlaces rápidos</h3>
+                    <ul class="space-y-3">
+                        <li><a href="{% url 'shop' %}" class="footer-link-modern">Tienda</a></li>
+                        <li><a href="#" class="footer-link-modern">Acerca de Nosotros</a></li>
+                        <li><a href="#" class="footer-link-modern">Contacto</a></li>
+                        <li><a href="#" class="footer-link-modern">FAQ</a></li>
+                        <li><a href="#" class="footer-link-modern">Política de Privacidad</a></li>
                     </ul>
                 </div>
 
-                <!-- Column 3: Contact & Social -->
+                <!-- Support Column -->
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Contact</h3>
-                    <ul class="space-y-2">
-                        <li class="text-gray-600">support@ddfarma.com</li>
-                        <li class="text-gray-600">+1 (555) 123-4567</li>
+                    <h3 class="footer-section-title">Soporte</h3>
+                    <ul class="space-y-3">
+                        <li class="text-slate-600 text-sm">support@ddfarma.com</li>
+                        <li class="text-slate-600 text-sm">+1 (555) 123-4567</li>
+                        <li class="text-slate-600 text-sm">Mon-Fri 9AM-6PM EST</li>
                     </ul>
-
-                    <div class="mt-4">
-                        <h3 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Follow Us</h3>
-                        <div class="flex space-x-4">
-                            <a href="#" class="text-gray-500 hover:text-blue-600">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="text-gray-500 hover:text-blue-600">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.22-1.13 6.93-.14.71-.42 1.34-.76 1.34-.65 0-1.14-1.62-1.14-1.62l-1.7-3.43s-.46-1.01-.95-.47c-.5.54-1.63 2.01-1.63 2.01s-.18.16-.41.11c-.22-.05-.3-.25-.3-.25l.14-1.13s2.57-3.61 3.43-4.2c.43-.29.92-.07.75.42-.17.5-1.62 2.27-1.62 2.27s-.15.24.18.36c.33.12.64-.04.64-.04l2.63-2.18c.51-.39 1.04.03.68.65-.37.63-1.92 2.49-1.92 2.49s-.18.31.12.42c.3.11 1.14-.73 1.14-.73s.74-.66.93.02c.17.59-.7 1.35-.7 1.35s-.07.15.05.2c.12.04.34-.16.5-.33.16-.17 1.26-1.27 1.26-1.27.52-.6 1.15.33.67.93-.48.6-2.71 2.69-3.76 3.23-1.05.53-1.12-.29-1.12-.29s-.05-.36.05-.59c.1-.22 1.11-3.77 1.11-3.77s-.1-.16-.31-.07c-.22.09-.84.54-.84.54s-3.03 2.4-4.2 2.4c-1.17 0-1.05-1.48-1.05-1.48s.07-5.21 7.86-5.21c.54.03 1.27.54 1.35.48.07-.07.15-.14.22-.21-.08.07-.08.07 0 0-.08.07.3-.28.23.48z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="text-gray-500 hover:text-blue-600">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
                 </div>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-slate-500 text-sm">
+                    © 2025 DDFarma. All rights reserved.
+                </p>
+                <p class="text-slate-500 text-sm mt-2 md:mt-0">
+                    Hecho con ❤️ para una mejor salud
+                </p>
             </div>
         </div>
     </footer>
@@ -295,13 +557,13 @@
             });
         }
 
-        // Navbar scroll effect - add shadow on scroll
+        // Enhanced navbar scroll effect
         window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('nav');
-            if (window.scrollY > 10) {
-                navbar.classList.add('shadow');
+            const navbar = document.querySelector('.navbar-modern');
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
             } else {
-                navbar.classList.remove('shadow');
+                navbar.classList.remove('scrolled');
             }
         });
     </script>

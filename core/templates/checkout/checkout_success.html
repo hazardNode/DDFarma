@@ -2,171 +2,799 @@
 
 {% block title %}Order Confirmed - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes bounce {
+        0%, 20%, 53%, 80%, 100% {
+            animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            transform: translate3d(0, 0, 0);
+        }
+        40%, 43% {
+            animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+            transform: translate3d(0, -30px, 0);
+        }
+        70% {
+            animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+            transform: translate3d(0, -15px, 0);
+        }
+        90% {
+            transform: translate3d(0, -4px, 0);
+        }
+    }
+
+    @keyframes shine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    @keyframes confetti {
+        0% { transform: rotate(0deg) scale(1); opacity: 1; }
+        100% { transform: rotate(720deg) scale(0); opacity: 0; }
+    }
+
+    /* Page container styles */
+    .success-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+        min-height: 100vh;
+        padding: 3rem 0;
+        animation: fadeIn 0.8s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Confetti decoration */
+    .success-container::before,
+    .success-container::after {
+        content: "";
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: #3b82f6;
+        border-radius: 50%;
+        animation: confetti 3s ease-out infinite;
+    }
+
+    .success-container::before {
+        top: 20%;
+        left: 10%;
+        animation-delay: 0.5s;
+    }
+
+    .success-container::after {
+        top: 30%;
+        right: 15%;
+        background: #22c55e;
+        animation-delay: 1s;
+    }
+
+    /* Hero section */
+    .success-hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: slideIn 0.8s ease-out;
+    }
+
+    .success-icon {
+        width: 8rem;
+        height: 8rem;
+        margin: 0 auto 2rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow:
+            0 20px 25px -5px rgba(34, 197, 94, 0.3),
+            0 10px 10px -5px rgba(34, 197, 94, 0.1);
+        animation: bounce 1.5s ease-out;
+        position: relative;
+    }
+
+    .success-icon::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e, #16a34a, #15803d, #22c55e);
+        background-size: 300% 300%;
+        animation: shine 2s linear infinite;
+        z-index: -1;
+    }
+
+    .success-icon svg {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .success-title {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .success-title::after {
+        content: "";
+        position: absolute;
+        bottom: -0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        border-radius: 9999px;
+    }
+
+    .success-subtitle {
+        color: #64748b;
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-description {
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .order-number {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #3b82f6;
+        border-radius: 9999px;
+        font-weight: 600;
+        color: #1e40af;
+        margin: 1rem 0;
+        font-family: monospace;
+        font-size: 1.125rem;
+    }
+
+    /* Order details card */
+    .order-details-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow:
+            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        position: relative;
+        animation: fadeIn 1s ease-out 0.5s both;
+        margin-bottom: 2rem;
+    }
+
+    .order-details-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+        background-size: 200% 100%;
+        animation: shine 4s linear infinite;
+    }
+
+    .card-header {
+        padding: 1.5rem 2rem 1rem;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-title svg {
+        margin-right: 0.5rem;
+        color: #3b82f6;
+    }
+
+    .card-content {
+        padding: 2rem;
+    }
+
+    /* Details grid */
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .detail-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .detail-value {
+        color: #1e293b;
+        font-weight: 500;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        width: fit-content;
+    }
+
+    .status-badge.delivered {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        color: #166534;
+        border: 1px solid #22c55e;
+    }
+
+    .status-badge.shipped {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #1e40af;
+        border: 1px solid #3b82f6;
+    }
+
+    .status-badge.cancelled {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        color: #991b1b;
+        border: 1px solid #ef4444;
+    }
+
+    .status-badge.pending {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        color: #92400e;
+        border: 1px solid #f59e0b;
+    }
+
+    .status-badge.paid {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        color: #166534;
+        border: 1px solid #22c55e;
+    }
+
+    .status-badge.failed {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        color: #991b1b;
+        border: 1px solid #ef4444;
+    }
+
+    .status-badge.refunded {
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        color: #581c87;
+        border: 1px solid #a855f7;
+    }
+
+    /* Shipping information */
+    .shipping-section {
+        background: #f8fafc;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .shipping-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .address-block {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Order items table */
+    .items-section {
+        background: #f8fafc;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+
+    .table-header th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-row {
+        transition: background-color 0.3s ease;
+    }
+
+    .table-row:hover {
+        background-color: #f8fafc;
+    }
+
+    .table-row td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+    }
+
+    .product-image {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.5rem;
+        object-fit: cover;
+        margin-right: 1rem;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    /* Order summary */
+    .summary-section {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    .summary-table {
+        min-width: 20rem;
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+        border-top: 2px solid #e2e8f0;
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: #059669;
+    }
+
+    .summary-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    /* Action buttons */
+    .actions-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 3rem;
+        animation: fadeIn 1.2s ease-out 0.8s both;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .action-btn svg {
+        margin-right: 0.5rem;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-secondary:hover {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        box-shadow:
+            0 4px 6px -1px rgba(59, 130, 246, 0.2),
+            0 2px 4px -1px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 10px 15px -3px rgba(59, 130, 246, 0.3),
+            0 4px 6px -2px rgba(59, 130, 246, 0.1);
+    }
+
+    .action-btn::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 70px;
+        height: 200%;
+        background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(25deg);
+        transition: all 0.6s ease;
+    }
+
+    .action-btn:hover::after {
+        left: 200%;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+        .success-title {
+            font-size: 2.5rem;
+        }
+
+        .details-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .shipping-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .success-container {
+            padding: 2rem 0;
+        }
+
+        .success-title {
+            font-size: 2rem;
+        }
+
+        .success-icon {
+            width: 6rem;
+            height: 6rem;
+        }
+
+        .success-icon svg {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .order-details-card {
+            border-radius: 1rem;
+            margin: 0 1rem 2rem;
+        }
+
+        .card-content {
+            padding: 1.5rem 1rem;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .actions-section {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-btn {
+            width: 100%;
+            max-width: 20rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .items-table,
+        .table-header,
+        .table-row {
+            display: block;
+        }
+
+        .table-header {
+            display: none;
+        }
+
+        .table-row {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-row td {
+            display: block;
+            padding: 0.75rem 1rem;
+            border: none;
+            text-align: center;
+        }
+
+        .table-row td:not(:last-child) {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-row td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #64748b;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .product-cell {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .product-image {
+            margin: 0 auto 0.5rem;
+        }
+
+        .summary-section {
+            justify-content: center;
+        }
+
+        .summary-table {
+            min-width: auto;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="text-center mb-12">
-        <div class="inline-flex items-center justify-center h-24 w-24 rounded-full bg-green-100 mb-6">
-            <svg class="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-        </div>
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-4">Order Confirmed!</h1>
-        <p class="text-lg text-gray-600 mb-2">Thank you for your order, {{ user.get_full_name|default:user.email }}.</p>
-        <p class="text-gray-600">Your order #{{ order.order_number }} has been successfully placed.</p>
-        <p class="text-gray-600">A confirmation email has been sent to {{ user.email }}.</p>
-    </div>
-    
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-        <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
-            <h2 class="text-lg font-medium text-gray-900">Order Details</h2>
-        </div>
-        <div class="px-4 py-5 sm:px-6">
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Order Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ order.order_number }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Order Date</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ order.order_date|date:"F j, Y" }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Order Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                        {% if order.status == 'delivered' %}bg-green-100 text-green-800
-                        {% elif order.status == 'cancelled' %}bg-red-100 text-red-800
-                        {% elif order.status == 'shipped' %}bg-blue-100 text-blue-800
-                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                            {{ order.get_status_display }}
-                        </span>
-                    </dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Payment Status</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                        {% if order.payment_status == 'paid' %}bg-green-100 text-green-800
-                        {% elif order.payment_status == 'failed' %}bg-red-100 text-red-800
-                        {% elif order.payment_status == 'refunded' %}bg-purple-100 text-purple-800
-                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                            {{ order.get_payment_status_display }}
-                        </span>
-                    </dd>
-                </div>
-            </dl>
-        </div>
-        
-        <!-- Shipping Information -->
-        <div class="px-4 py-5 border-t border-gray-200 sm:px-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Shipping Information</h3>
-            <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Shipping Address</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                        <address class="not-italic">
-                            {{ order.shipping_address.street }}<br>
-                            {{ order.shipping_address.city }}, {{ order.shipping_address.province }} {{ order.shipping_address.postal_code }}
-                            <div class="mt-1">{{ order.shipping_address.phone }}</div>
-                        </address>
-                    </dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Shipping Method</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ order.shipping_method.name }}</dd>
-                    
-                    {% if order.tracking_number %}
-                    <dt class="text-sm font-medium text-gray-500 mt-4">Tracking Number</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ order.tracking_number }}</dd>
-                    {% endif %}
-                </div>
+<div class="success-container">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Hero Section -->
+        <div class="success-hero">
+            <div class="success-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
             </div>
+            <h1 class="success-title">¡Pedido Confirmado!</h1>
+            <p class="success-subtitle">Gracias por su compra, {{ user.get_full_name|default:user.email }}.</p>
+            <div class="order-number">#{{ order.order_number }}</div>
+            <p class="success-description">Tu pedido ha sido procesado y se ha enviado un correo de confirmación a {{ user.email }}.</p>
         </div>
-        
-        <!-- Order Items -->
-        <div class="px-4 py-5 border-t border-gray-200 sm:px-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Order Items</h3>
-            <div class="overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Product
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Quantity
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Subtotal
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    {% for item in order.items.all %}
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        {% if item.product.primary_image %}
-                                            <img class="h-10 w-10 rounded object-cover" src="{{ item.product.primary_image.url }}" alt="{{ item.product.name }}">
-                                        {% else %}
-                                            <div class="h-10 w-10 rounded bg-gray-200"></div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ item.product.name }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">${{ item.price_at_purchase }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ item.quantity }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${{ item.get_cost }}</div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+
+        <!-- Order Details Card -->
+        <div class="order-details-card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 0a1 1 0 100 2h.01a1 1 0 100-2H9z" clip-rule="evenodd" />
+                    </svg>
+                    Detalles del Pedido
+                </h2>
             </div>
-        </div>
-        
-        <!-- Order Summary -->
-        <div class="px-4 py-5 border-t border-gray-200 sm:px-6">
-            <div class="flex flex-col sm:items-end">
-                <div class="w-full sm:w-64">
-                    <div class="flex justify-between py-2">
-                        <dt class="text-sm font-medium text-gray-500">Subtotal</dt>
-                        <dd class="text-sm font-medium text-gray-900">${{ order.subtotal }}</dd>
+
+            <div class="card-content">
+                <!-- Order Information Grid -->
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Código del Pedido</div>
+                        <div class="detail-value">{{ order.order_number }}</div>
                     </div>
-                    <div class="flex justify-between py-2">
-                        <dt class="text-sm font-medium text-gray-500">Shipping</dt>
-                        <dd class="text-sm font-medium text-gray-900">${{ order.shipping_cost }}</dd>
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha del Pedido</div>
+                        <div class="detail-value">{{ order.order_date|date:"F j, Y" }}</div>
                     </div>
-                    <div class="flex justify-between py-2 border-t border-gray-200">
-                        <dt class="text-base font-medium text-gray-900">Total</dt>
-                        <dd class="text-base font-medium text-gray-900">${{ order.total_amount }}</dd>
+                    <div class="detail-item">
+                        <div class="detail-label">Estado del Pedido</div>
+                        <div class="detail-value">
+                            <span class="status-badge {% if order.status == 'delivered' %}delivered{% elif order.status == 'cancelled' %}cancelled{% elif order.status == 'shipped' %}shipped{% else %}pending{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Estado del Pago</div>
+                        <div class="detail-value">
+                            <span class="status-badge {% if order.payment_status == 'paid' %}paid{% elif order.payment_status == 'failed' %}failed{% elif order.payment_status == 'refunded' %}refunded{% else %}pending{% endif %}">
+                                {{ order.get_payment_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Information -->
+                <div class="shipping-section">
+                    <h3 class="card-title mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                            <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707L16 7.586A1 1 0 0015.414 7H14z" />
+                        </svg>
+                        Información del Envío
+                    </h3>
+                    <div class="shipping-grid">
+                        <div class="address-block">
+                            <div class="detail-label">Dirección de Envío</div>
+                            <address class="detail-value not-italic">
+                                {{ order.shipping_address.street }}<br>
+                                {{ order.shipping_address.city }}, {{ order.shipping_address.province }} {{ order.shipping_address.postal_code }}<br>
+                                <div class="mt-1">{{ order.shipping_address.phone }}</div>
+                            </address>
+                        </div>
+                        <div class="address-block">
+                            <div class="detail-label">Método de Envío</div>
+                            <div class="detail-value">{{ order.shipping_method.name }}</div>
+                            {% if order.tracking_number %}
+                            <div class="detail-label mt-4">Numero de Seguimiento</div>
+                            <div class="detail-value font-mono">{{ order.tracking_number }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="items-section">
+                    <h3 class="card-title mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                        </svg>
+                        Productos del Pedido
+                    </h3>
+                    <table class="items-table">
+                        <thead class="table-header">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                                <tr class="table-row">
+                                    <td data-label="Product">
+                                        <div class="product-cell">
+                                            {% if item.product.primary_image %}
+                                                <img class="product-image" src="{{ item.product.primary_image.url }}" alt="{{ item.product.name }}">
+                                            {% else %}
+                                                <div class="product-image bg-gray-200"></div>
+                                            {% endif %}
+                                            <div class="product-name">{{ item.product.name }}</div>
+                                        </div>
+                                    </td>
+                                    <td data-label="Price">
+                                        <div class="detail-value">${{ item.price_at_purchase }}</div>
+                                    </td>
+                                    <td data-label="Quantity">
+                                        <div class="detail-value">{{ item.quantity }}</div>
+                                    </td>
+                                    <td data-label="Subtotal">
+                                        <div class="detail-value font-semibold">${{ item.get_cost }}</div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="summary-section">
+                    <div class="summary-table">
+                        <div class="summary-row">
+                            <div class="summary-label">Subtotal</div>
+                            <div class="summary-value">${{ order.subtotal }}</div>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-label">Envio</div>
+                            <div class="summary-value">${{ order.shipping_cost }}</div>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-label">Total</div>
+                            <div class="summary-value">${{ order.total_amount }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-        <a href="{% url 'order_history' %}" 
-           class="inline-flex justify-center items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            View Order History
-        </a>
-        <a href="{% url 'shop' %}" 
-           class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            Continue Shopping
-        </a>
+
+        <!-- Action Buttons -->
+        <div class="actions-section">
+            <a href="{% url 'order_history' %}" class="action-btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 0a1 1 0 100 2h.01a1 1 0 100-2H9z" clip-rule="evenodd" />
+                </svg>
+                Mirar Historial
+            </a>
+            <a href="{% url 'shop' %}" class="action-btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                </svg>
+                Seguir Comprando
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

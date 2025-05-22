@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import resolve, reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from allauth.account.views import ConfirmEmailView
+from allauth.account.views import ConfirmEmailView, PasswordResetView, PasswordResetFromKeyView
 from django.contrib import messages
 from .cart import Cart
 from core.models import Product, Order, Category, User, ProductImage, PaymentMethod, Address, ShippingMethod, OrderItem
@@ -1154,3 +1154,64 @@ def order_confirmation(request, order_id):
     return render(request, 'checkout/order_confirmation.html', {
         'order': order
     })
+
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'account/password_reset.html'
+
+    def form_valid(self, form):
+        # Handle AJAX requests with JSON response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            email = form.cleaned_data["email"]
+            form.save(self.request)
+            return JsonResponse({
+                'success': True,
+                'message': f'If an account with email {email} exists, password reset instructions have been sent.',
+                'email': email
+            })
+        # For non-AJAX, use default behavior
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Handle AJAX requests with JSON response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = {}
+            for field, error_list in form.errors.items():
+                errors[field] = error_list
+            return JsonResponse({
+                'success': False,
+                'errors': errors,
+                'message': 'Please correct the errors below.'
+            }, status=400)
+        # For non-AJAX, use default behavior
+        return super().form_invalid(form)
+
+
+class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
+    template_name = 'account/password_reset_from_key.html'
+
+    def form_valid(self, form):
+        # Handle AJAX requests with JSON response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Your password has been successfully reset! You can now log in with your new password.',
+                'redirect_url': 'account/login/'
+            })
+        # For non-AJAX, use default behavior
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Handle AJAX requests with JSON response
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = {}
+            for field, error_list in form.errors.items():
+                errors[field] = error_list
+            return JsonResponse({
+                'success': False,
+                'errors': errors,
+                'message': 'Please correct the errors below.'
+            }, status=400)
+        # For non-AJAX, use default behavior
+        return super().form_invalid(form)

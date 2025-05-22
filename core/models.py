@@ -191,7 +191,7 @@ class PaymentMethod(models.Model):
         self.last4 = last4
         self.expiry_month = exp_month
         self.expiry_year = exp_year
-        self.display_name = f"{brand} ending in {last4}"
+        self.display_name = f"{brand} acabada en {last4}"
 
     def set_bank_account_details(self, bank_name, last4):
         """Set the display information for a bank account payment method"""

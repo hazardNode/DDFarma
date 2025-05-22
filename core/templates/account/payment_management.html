@@ -1,4 +1,3 @@
-<!-- payment_management.html with Stripe Elements integration including SEPA bank accounts -->
 {% extends "base.html" %}
 
 {% block title %}Payment Methods - {{ block.super }}{% endblock %}
@@ -10,157 +9,857 @@
         box-sizing: border-box;
         height: 40px;
         padding: 10px 12px;
-        border: 1px solid #E5E7EB;
-        border-radius: 0.375rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
         background-color: white;
-        transition: box-shadow 150ms ease;
+        transition: all 0.3s ease;
     }
 
     .StripeElement--focus {
-        box-shadow: 0 0 0 2px #3B82F6;
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     .StripeElement--invalid {
-        border-color: #EF4444;
+        border-color: #ef4444;
     }
 
     .StripeElement--webkit-autofill {
-        background-color: #F3F9FF !important;
+        background-color: #f0f9ff !important;
+    }
+
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    @keyframes shine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Page container styles */
+    .dashboard-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: calc(100vh - 4rem);
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .page-title {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 2rem;
+    }
+
+    .page-title::after {
+        content: "";
+        position: absolute;
+        bottom: -0.5rem;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #a855f7);
+        border-radius: 9999px;
+    }
+
+    /* Sidebar navigation styles */
+    .nav-sidebar {
+        background: white;
+        border-radius: 1rem;
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.05),
+            0 4px 6px -2px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        position: relative;
+        animation: slideIn 0.6s ease-out;
+    }
+
+    .nav-sidebar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc, #7c3aed);
+        background-size: 200% 100%;
+        animation: shine 6s linear infinite;
+    }
+
+    .nav-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .nav-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-title svg {
+        margin-right: 0.5rem;
+        color: #7c3aed;
+    }
+
+    .nav-menu {
+        padding: 1rem;
+    }
+
+    .nav-item {
+        display: block;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.25rem;
+        border-radius: 0.5rem;
+        color: #64748b;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-item:hover {
+        background-color: #f1f5f9;
+        color: #7c3aed;
+        transform: translateX(5px);
+    }
+
+    .nav-item.active {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+    }
+
+    .nav-item.active::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+        animation: shine 3s ease-in-out infinite;
+    }
+
+    .nav-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.75rem;
+    }
+
+    .logout-form {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .logout-btn {
+        width: 100%;
+        text-align: left;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        color: #ef4444;
+        font-weight: 500;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+        background-color: #fef2f2;
+        color: #dc2626;
+        transform: translateX(5px);
+    }
+
+    /* Main content styles */
+    .main-content {
+        background: white;
+        border-radius: 1rem;
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.05),
+            0 4px 6px -2px rgba(0, 0, 0, 0.03);
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .main-content::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc, #7c3aed);
+        background-size: 200% 100%;
+        animation: shine 8s linear infinite;
+    }
+
+    .content-header {
+        padding: 2rem 2rem 1rem;
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .content-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+    }
+
+    .content-title svg {
+        margin-right: 0.75rem;
+        color: #7c3aed;
+    }
+
+    .add-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(90deg, #7c3aed, #6d28d9);
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        box-shadow:
+            0 4px 6px -1px rgba(124, 58, 237, 0.2),
+            0 2px 4px -1px rgba(124, 58, 237, 0.1);
+    }
+
+    .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 10px 15px -3px rgba(124, 58, 237, 0.3),
+            0 4px 6px -2px rgba(124, 58, 237, 0.1);
+    }
+
+    .add-btn::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 70px;
+        height: 200%;
+        background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(25deg);
+        transition: all 0.6s ease;
+    }
+
+    .add-btn:hover::after {
+        left: 200%;
+    }
+
+    /* Payment method cards */
+    .payment-grid {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .payment-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .payment-card {
+        position: relative;
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .payment-card:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 10px 25px -5px rgba(0, 0, 0, 0.1),
+            0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .payment-card.default {
+        border-color: #7c3aed;
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+    }
+
+    .payment-card.default::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #a855f7);
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .payment-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .payment-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+    }
+
+    .payment-info {
+        flex-grow: 1;
+    }
+
+    .payment-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+
+    .payment-details {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .payment-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background-color: #ede9fe;
+        color: #7c3aed;
+        margin-top: 0.5rem;
+    }
+
+    .payment-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        background: none;
+    }
+
+    .action-btn.default {
+        color: #64748b;
+        background-color: #f1f5f9;
+    }
+
+    .action-btn.default:hover {
+        color: #475569;
+        background-color: #e2e8f0;
+    }
+
+    .action-btn.delete {
+        color: #ef4444;
+        background-color: #fef2f2;
+    }
+
+    .action-btn.delete:hover {
+        color: #dc2626;
+        background-color: #fee2e2;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-state svg {
+        margin: 0 auto 1rem;
+        color: #cbd5e1;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.show {
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 1rem;
+        box-shadow:
+            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 28rem;
+        width: 100%;
+        margin: 1rem;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.show .modal-content {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .modal-close {
+        color: #6b7280;
+        hover: #374151;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background-color: white;
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .form-checkbox {
+        margin-right: 0.5rem;
+    }
+
+    .form-error {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-help {
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        font-style: italic;
+    }
+
+    .modal-actions {
+        padding: 1rem 1.5rem 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-primary {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(90deg, #7c3aed, #6d28d9);
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);
+    }
+
+    .btn-secondary {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        background: white;
+        color: #374151;
+        font-weight: 600;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: #f9fafb;
+    }
+
+    .btn-danger {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+        color: white;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Processing overlay */
+    .processing-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 60;
+    }
+
+    .processing-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow:
+            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .spinner {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-top: 2px solid #7c3aed;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .nav-sidebar {
+            margin-bottom: 1.5rem;
+        }
+
+        .content-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.5rem 1rem;
+        }
+
+        .payment-grid {
+            padding: 1.5rem 1rem;
+            grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            margin: 0.5rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">My Account</h2>
+<div class="dashboard-container py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="page-title text-3xl font-bold text-gray-800 bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+            Mi cuenta
+        </h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Left sidebar: Account navigation -->
-        <div class="col-span-1">
-            <div class="bg-white rounded-lg shadow p-4">
-                <h3 class="text-lg font-medium text-gray-700 mb-4">Account Menu</h3>
-                <nav class="space-y-2">
-                    <a href="{% url 'account_dashboard' %}"
-                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        Personal Information
-                    </a>
-                    <a href="{% url 'address_management' %}"
-                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        Addresses
-                    </a>
-                    <a href="{% url 'payment_management' %}"
-                       class="block px-4 py-2 rounded-md text-blue-600 bg-blue-50 font-medium">
-                        Payment Methods
-                    </a>
-                    <a href="{% url 'order_history' %}"
-                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        Order History
-                    </a>
-                    <a href="{% url 'account_email' %}"
-                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        Email Settings
-                    </a>
-                    <a href="{% url 'account_change_password' %}"
-                       class="block px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-blue-600">
-                        Change Password
-                    </a>
-                    <form method="post" action="{% url 'account_logout' %}" class="mt-4">
-                        {% csrf_token %}
-                        {% if redirect_field_value %}
-                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-                        {% endif %}
-                        <button type="submit" class="w-full text-left px-4 py-2 rounded-md text-red-600 hover:bg-red-50 font-medium">
-                            Sign Out
-                        </button>
-                    </form>
-                </nav>
-            </div>
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Left sidebar: Account navigation -->
+            <div class="lg:col-span-1">
+                <div class="nav-sidebar">
+                    <div class="nav-header">
+                        <h3 class="nav-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" />
+                            </svg>
+                            Menú de la Cuenta
+                        </h3>
+                    </div>
 
-        <!-- Right content: Main content area -->
-        <div class="col-span-1 md:col-span-2">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold text-gray-800">Payment Methods</h3>
-                    <button id="addPaymentBtn" type="button"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                        </svg>
-                        Add Payment Method
-                    </button>
+                    <nav class="nav-menu">
+                        <a href="{% url 'account_dashboard' %}" class="nav-item">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                            Usuario
+                        </a>
+
+                        <a href="{% url 'address_management' %}" class="nav-item">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                            Direcciones
+                        </a>
+
+                        <a href="{% url 'payment_management' %}" class="nav-item active">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                            Métodos de Pago
+                        </a>
+
+                        <a href="{% url 'order_history' %}" class="nav-item">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 2a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                            Historial
+                        </a>
+
+                        <a href="{% url 'account_email' %}" class="nav-item">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                </svg>
+                            </span>
+                            Email
+                        </a>
+
+                        <a href="{% url 'account_change_password' %}" class="nav-item">
+                            <span class="nav-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                            Contraseña
+                        </a>
+
+                        <div class="logout-form">
+                            <form method="post" action="{% url 'account_logout' %}">
+                                {% csrf_token %}
+                                {% if redirect_field_value %}
+                                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                                {% endif %}
+                                <button type="submit" class="logout-btn">
+                                    <span class="nav-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    Cerrar Sesión
+                                </button>
+                            </form>
+                        </div>
+                    </nav>
                 </div>
+            </div>
 
-                <!-- Payment Method List -->
-                {% if payment_methods %}
-                <div class="space-y-4">
-                    {% for payment in payment_methods %}
-                    <div class="border rounded-lg p-4 {% if payment.is_default %}bg-blue-50 border-blue-200{% else %}border-gray-200{% endif %}">
-                        <div class="flex justify-between">
-                            <div>
-                                <div class="flex items-center">
+            <!-- Right content: Main content area -->
+            <div class="lg:col-span-3">
+                <div class="main-content">
+                    <div class="content-header">
+                        <h3 class="content-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                            </svg>
+                            Métodos de Pago
+                        </h3>
+
+                        <button id="addPaymentBtn" type="button" class="add-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Añadir un Método de Pago
+                        </button>
+                    </div>
+
+                    <!-- Payment Method List -->
+                    {% if payment_methods %}
+                    <div class="payment-grid">
+                        {% for payment in payment_methods %}
+                        <div class="payment-card {% if payment.is_default %}default{% endif %}">
+                            <div class="payment-header">
+                                <div class="payment-icon">
                                     {% if payment.payment_type == 'card' %}
-                                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                                     </svg>
                                     {% elif payment.payment_type == 'sepa_debit' %}
-                                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
                                     </svg>
                                     {% else %}
-                                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
                                     </svg>
                                     {% endif %}
-                                    <div class="ml-3">
-                                        <p class="font-medium">{{ payment.display_name }}</p>
-                                        {% if payment.is_default %}
-                                        <span class="inline-flex mt-1 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Default
-                                        </span>
-                                        {% endif %}
+                                </div>
+                                <div class="payment-info">
+                                    <div class="payment-name">{{ payment.display_name }}</div>
+                                    <div class="payment-details">
                                         {% if payment.expiry_month and payment.expiry_year %}
-                                        <p class="text-sm text-gray-500">Expires: {{ payment.expiry_month }}/{{ payment.expiry_year }}</p>
+                                        Caducidad: {{ payment.expiry_month }}/{{ payment.expiry_year }}
                                         {% endif %}
                                     </div>
+                                    {% if payment.is_default %}
+                                    <span class="payment-badge">Default Payment</span>
+                                    {% endif %}
                                 </div>
                             </div>
-                            <div class="flex flex-col space-y-2">
-                                {% if not payment.is_default %}
-                                <button data-payment-id="{{ payment.id }}" class="makeDefaultPaymentBtn text-sm text-gray-600 hover:text-gray-800">
-                                    Set as Default
+
+                            {% if not payment.is_default %}
+                            <div class="payment-actions">
+                                <button data-payment-id="{{ payment.id }}" class="action-btn default makeDefaultPaymentBtn">
+                                    Establecer como Predeterminado
                                 </button>
-                                <button data-payment-id="{{ payment.id }}" class="deletePaymentBtn text-sm text-red-600 hover:text-red-800">
-                                    Delete
+                                <button data-payment-id="{{ payment.id }}" class="action-btn delete deletePaymentBtn">
+                                    Eliminar
                                 </button>
-                                {% endif %}
                             </div>
+                            {% endif %}
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <svg class="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Ningún Metodo de Pago</h3>
+                        <p class="text-gray-500 mb-4">No has añadido ningún Metodo de Pago Todavia</p>
+                        <button type="button" class="add-btn" onclick="document.getElementById('addPaymentBtn').click()">
+                            Añade tu Primer Método de Pago
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="text-center py-8 bg-gray-50 rounded-lg">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No payment methods</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        You haven't added any payment methods yet.
-                    </p>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <!-- Payment Method Form Modal -->
-<div id="paymentModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Add Payment Method</h3>
-            <button id="closePaymentModal" class="text-gray-400 hover:text-gray-500">
+<div id="paymentModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Añadir Método de Pago</h3>
+            <button id="closePaymentModal" class="modal-close">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -169,96 +868,96 @@
 
         <form id="paymentForm">
             {% csrf_token %}
-
-            <div class="space-y-4">
-                <div>
-                    <label for="payment_type" class="block text-sm font-medium text-gray-700">Payment Type</label>
-                    <select id="payment_type" name="payment_type" required
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <option value="card">Credit/Debit Card</option>
-                        <option value="sepa_debit">Bank Account (SEPA Direct Debit)</option>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="payment_type" class="form-label">Tipo de Pago</label>
+                    <select id="payment_type" name="payment_type" required class="form-select">
+                        <option value="card">Tarjeta de Crédito/Débito</option>
+                        <option value="sepa_debit">Cuenta Bancaria (SEPA Direct Debit)</option>
                     </select>
                 </div>
 
                 <!-- Credit Card Fields -->
                 <div id="cardElementContainer">
-                    <div id="cardElement" class="mt-2">
-                        <!-- Stripe Card Element will be inserted here -->
+                    <div class="form-group">
+                        <label class="form-label">Información de la Tarjeta</label>
+                        <div id="cardElement" class="form-input">
+                            <!-- Stripe Card Element will be inserted here -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- SEPA Bank Account Fields -->
                 <div id="sepaElementContainer" class="hidden">
-                    <div class="mb-4">
-                        <label for="account_holder_name" class="block text-sm font-medium text-gray-700">Account Holder Name</label>
-                        <input type="text" id="account_holder_name" name="account_holder_name"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <div class="form-group">
+                        <label for="account_holder_name" class="form-label">Nombre de la Cuenta</label>
+                        <input type="text" id="account_holder_name" name="account_holder_name" class="form-input" placeholder="Enter account holder name">
                     </div>
-                    <div id="ibanElement" class="mt-2">
-                        <!-- Stripe IBAN Element will be inserted here -->
-                    </div>
-                    <div class="mt-2 text-xs text-gray-500">
-                        By providing your IBAN and confirming this payment, you are authorizing our company and Stripe, our payment service provider, to send instructions to your bank to debit your account. You are entitled to a refund from your bank under the terms and conditions of your agreement with your bank. A refund must be claimed within 8 weeks starting from the date on which your account was debited.
+                    <div class="form-group">
+                        <label class="form-label">IBAN</label>
+                        <div id="ibanElement" class="form-input">
+                            <!-- Stripe IBAN Element will be inserted here -->
+                        </div>
+                        <p class="form-help">
+                            Al facilitar su IBAN y confirmar este pago, autoriza a nuestra empresa y a Stripe, nuestro proveedor de servicios de pago, a enviar instrucciones a su banco para que cargue el importe en su cuenta. Usted tiene derecho a un reembolso de su banco según los términos y condiciones de su acuerdo con su banco. El reembolso debe reclamarse en un plazo de 8 semanas a partir de la fecha en que se realizó el cargo en su cuenta.
+                        </p>
                     </div>
                 </div>
 
-                <div id="paymentErrors" class="mt-2 text-sm text-red-600" role="alert"></div>
+                <div id="paymentErrors" class="form-error"></div>
 
-                <div class="flex items-center">
-                    <input type="checkbox" id="is_default_payment" name="is_default_payment" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <label for="is_default_payment" class="ml-2 block text-sm text-gray-900">
-                        Set as default payment method
+                <div class="form-group">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="is_default_payment" name="is_default_payment" class="form-checkbox h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                        <span class="ml-2 text-sm text-gray-900">Establecer como método de pago predeterminado</span>
                     </label>
                 </div>
             </div>
 
-            <div class="mt-5 sm:mt-6">
-                <button type="submit" id="savePaymentBtn"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
-                    Save Payment Method
-                </button>
+            <div class="modal-actions">
+                <button type="button" id="cancelPaymentBtn" class="btn-secondary">Cancelar</button>
+                <button type="submit" id="savePaymentBtn" class="btn-primary">Guardar el Método de Pago</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deletePaymentModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4">
-        <div class="mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Delete Payment Method</h3>
-            <p class="mt-2 text-sm text-gray-500">
-                Are you sure you want to delete this payment method? This action cannot be undone.
-            </p>
+<div id="deletePaymentModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Borrar Método de Pago</h3>
         </div>
-
-        <div class="mt-5 sm:mt-6 flex space-x-2">
-            <button id="cancelDeletePaymentBtn"
-                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
-                Cancel
-            </button>
-            <button id="confirmDeletePaymentBtn"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
-                Delete
-            </button>
+        <div class="modal-body">
+            <p class="text-gray-600">¿Estás seguro de que quieres borrar este Método de Pago? Esta acción no se puede deshacer</p>
+        </div>
+        <div class="modal-actions">
+            <button id="cancelDeletePaymentBtn" class="btn-secondary">Cancelar</button>
+            <button id="confirmDeletePaymentBtn" class="btn-danger">Borrar</button>
         </div>
     </div>
 </div>
 
 <!-- Processing Overlay -->
-<div id="processingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-4 rounded-lg shadow-lg flex items-center">
-        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Processing...</span>
+<div id="processingOverlay" class="processing-overlay hidden">
+    <div class="processing-content">
+        <div class="spinner"></div>
+        <span class="font-medium">Procesando...</span>
     </div>
 </div>
 
-<!-- Notification Element -->
-<div id="notification"
-    class="fixed bottom-4 right-4 px-4 py-2 rounded-md text-white bg-green-500 opacity-0 transition-opacity duration-500">
+<!-- Notification Element - matching base.html style -->
+<div id="message-container" class="fixed bottom-4 right-4 z-50 w-72 max-w-full space-y-2 hidden">
+    <div id="payment-notification" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out opacity-0 translate-y-2" role="alert">
+        <div class="flex items-center justify-between">
+            <span id="notification-message" class="block font-medium"></span>
+            <button type="button" class="ml-2 flex-shrink-0" onclick="dismissNotification()">
+                <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
 </div>
 
 {% block extra_js %}
@@ -271,45 +970,80 @@
     let card, iban;
     let paymentMethodType = 'card'; // Default payment method type
 
+    // Notification functions matching base.html
     function showNotification(message, type = 'success') {
-        const $notification = $('#notification');
-        $notification.text(message);
+        const messageContainer = document.getElementById('message-container');
+        const notification = document.getElementById('payment-notification');
+        const notificationMessage = document.getElementById('notification-message');
+
+        notificationMessage.textContent = message;
 
         if (type === 'error') {
-            $notification.removeClass('bg-green-500').addClass('bg-red-500');
+            notification.classList.remove('from-green-500', 'to-green-600');
+            notification.classList.add('from-red-500', 'to-red-600');
         } else {
-            $notification.removeClass('bg-red-500').addClass('bg-green-500');
+            notification.classList.remove('from-red-500', 'to-red-600');
+            notification.classList.add('from-green-500', 'to-green-600');
         }
 
-        $notification.css('opacity', '1');
+        messageContainer.classList.remove('hidden');
 
-        setTimeout(function () {
-            $notification.css('opacity', '0');
-        }, 3000);
+        setTimeout(() => {
+            notification.classList.remove('opacity-0', 'translate-y-2');
+        }, 10);
+
+        setTimeout(function() {
+            dismissNotification();
+        }, 5000);
+    }
+
+    function dismissNotification() {
+        const messageContainer = document.getElementById('message-container');
+        const notification = document.getElementById('payment-notification');
+
+        notification.classList.add('opacity-0', 'translate-y-2');
+
+        setTimeout(() => {
+            messageContainer.classList.add('hidden');
+        }, 300);
     }
 
     function showProcessing(show = true) {
+        const overlay = document.getElementById('processingOverlay');
         if (show) {
-            $('#processingOverlay').removeClass('hidden');
+            overlay.classList.remove('hidden');
         } else {
-            $('#processingOverlay').addClass('hidden');
+            overlay.classList.add('hidden');
         }
     }
 
-    $(document).ready(function() {
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.remove('show');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
         // Toggle payment type fields
-        $('#payment_type').change(function() {
-            paymentMethodType = $(this).val();
+        document.getElementById('payment_type').addEventListener('change', function() {
+            paymentMethodType = this.value;
 
-            // Hide all payment fields
-            $('#cardElementContainer, #sepaElementContainer').addClass('hidden');
+            const cardContainer = document.getElementById('cardElementContainer');
+            const sepaContainer = document.getElementById('sepaElementContainer');
 
-            // Show fields based on selected payment type
             if (paymentMethodType === 'card') {
-                $('#cardElementContainer').removeClass('hidden');
+                cardContainer.classList.remove('hidden');
+                sepaContainer.classList.add('hidden');
                 setupCardElement();
             } else if (paymentMethodType === 'sepa_debit') {
-                $('#sepaElementContainer').removeClass('hidden');
+                cardContainer.classList.add('hidden');
+                sepaContainer.classList.remove('hidden');
                 setupIbanElement();
             }
         });
@@ -320,7 +1054,6 @@
                 card.destroy();
             }
 
-            // Create a card Element
             card = elements.create('card', {
                 style: {
                     base: {
@@ -339,10 +1072,8 @@
                 }
             });
 
-            // Mount the Element to the div
             card.mount('#cardElement');
 
-            // Handle real-time validation errors
             card.on('change', function(event) {
                 const displayError = document.getElementById('paymentErrors');
                 if (event.error) {
@@ -359,7 +1090,6 @@
                 iban.destroy();
             }
 
-            // Create an IBAN Element
             iban = elements.create('iban', {
                 style: {
                     base: {
@@ -376,13 +1106,11 @@
                         iconColor: '#fa755a'
                     }
                 },
-                supportedCountries: ['SEPA'], // SEPA includes Spain
+                supportedCountries: ['SEPA'],
             });
 
-            // Mount the Element to the div
             iban.mount('#ibanElement');
 
-            // Handle real-time validation errors
             iban.on('change', function(event) {
                 const displayError = document.getElementById('paymentErrors');
                 if (event.error) {
@@ -394,40 +1122,37 @@
         }
 
         // Open payment modal
-        $('#addPaymentBtn').click(function() {
-            // Reset form
-            $('#paymentForm')[0].reset();
-            $('#paymentErrors').text('');
+        document.getElementById('addPaymentBtn').addEventListener('click', function() {
+            document.getElementById('paymentForm').reset();
+            document.getElementById('paymentErrors').textContent = '';
 
-            // Default to card payment type
-            $('#payment_type').val('card');
+            document.getElementById('payment_type').value = 'card';
             paymentMethodType = 'card';
 
-            // Show card fields, hide others
-            $('#cardElementContainer').removeClass('hidden');
-            $('#sepaElementContainer').addClass('hidden');
+            document.getElementById('cardElementContainer').classList.remove('hidden');
+            document.getElementById('sepaElementContainer').classList.add('hidden');
 
-            // Setup Stripe Elements
             setupCardElement();
-
-            // Show modal
-            $('#paymentModal').removeClass('hidden');
+            showModal('paymentModal');
         });
 
         // Close payment modal
-        $('#closePaymentModal').click(function() {
-            $('#paymentModal').addClass('hidden');
+        document.getElementById('closePaymentModal').addEventListener('click', function() {
+            hideModal('paymentModal');
+        });
+
+        document.getElementById('cancelPaymentBtn').addEventListener('click', function() {
+            hideModal('paymentModal');
         });
 
         // Save payment method
-        $('#paymentForm').submit(function(e) {
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
             e.preventDefault();
             showProcessing(true);
 
-            const set_default = $('#is_default_payment').is(':checked');
+            const set_default = document.getElementById('is_default_payment').checked;
 
             if (paymentMethodType === 'card') {
-                // Create a payment method with card
                 stripe.createPaymentMethod({
                     type: 'card',
                     card: card,
@@ -437,15 +1162,14 @@
                     }
                 }).then(handlePaymentMethodResult);
             } else if (paymentMethodType === 'sepa_debit') {
-                const accountHolderName = $('#account_holder_name').val();
+                const accountHolderName = document.getElementById('account_holder_name').value;
 
                 if (!accountHolderName) {
-                    document.getElementById('paymentErrors').textContent = 'Please enter the account holder name.';
+                    document.getElementById('paymentErrors').textContent = 'Por favor introduce el nombre de tu cuenta';
                     showProcessing(false);
                     return;
                 }
 
-                // Create a payment method with SEPA Direct Debit
                 stripe.createPaymentMethod({
                     type: 'sepa_debit',
                     sepa_debit: iban,
@@ -458,12 +1182,9 @@
 
             function handlePaymentMethodResult(result) {
                 if (result.error) {
-                    // Show error in the form
-                    const errorElement = document.getElementById('paymentErrors');
-                    errorElement.textContent = result.error.message;
+                    document.getElementById('paymentErrors').textContent = result.error.message;
                     showProcessing(false);
                 } else {
-                    // Send payment method ID to your server
                     fetch('{% url "payment_create" %}', {
                         method: 'POST',
                         headers: {
@@ -481,9 +1202,8 @@
                         showProcessing(false);
 
                         if (data.success) {
-                            $('#paymentModal').addClass('hidden');
+                            hideModal('paymentModal');
                             showNotification(data.message, 'success');
-                            // Reload page to show updated payment methods
                             setTimeout(() => {
                                 location.reload();
                             }, 1000);
@@ -495,60 +1215,63 @@
                     .catch(error => {
                         showProcessing(false);
                         console.error('Error:', error);
-                        showNotification('An error occurred while saving the payment method', 'error');
+                        showNotification('A ocurrido un error guardando el método de pago', 'error');
                     });
                 }
             }
         });
 
         // Set as default payment method
-        $('.makeDefaultPaymentBtn').click(function() {
-            const paymentId = $(this).data('payment-id');
-            showProcessing(true);
+        document.querySelectorAll('.makeDefaultPaymentBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const paymentId = this.getAttribute('data-payment-id');
+                showProcessing(true);
 
-            fetch(`/account/payments/${paymentId}/default/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                showProcessing(false);
+                fetch(`/account/payments/${paymentId}/default/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showProcessing(false);
 
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    // Reload page to show updated default payment method
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                showProcessing(false);
-                console.error('Error:', error);
-                showNotification('An error occurred while setting default payment method', 'error');
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showProcessing(false);
+                    console.error('Error:', error);
+                    showNotification('A ocurrido un error estableciendo el método de pago como predeterminado', 'error');
+                });
             });
         });
 
         // Open delete confirmation modal
-        $('.deletePaymentBtn').click(function() {
-            const paymentId = $(this).data('payment-id');
-            $('#confirmDeletePaymentBtn').data('payment-id', paymentId);
-            $('#deletePaymentModal').removeClass('hidden');
+        document.querySelectorAll('.deletePaymentBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const paymentId = this.getAttribute('data-payment-id');
+                document.getElementById('confirmDeletePaymentBtn').setAttribute('data-payment-id', paymentId);
+                showModal('deletePaymentModal');
+            });
         });
 
         // Close delete confirmation modal
-        $('#cancelDeletePaymentBtn').click(function() {
-            $('#deletePaymentModal').addClass('hidden');
+        document.getElementById('cancelDeletePaymentBtn').addEventListener('click', function() {
+            hideModal('deletePaymentModal');
         });
 
         // Confirm delete payment method
-        $('#confirmDeletePaymentBtn').click(function() {
-            const paymentId = $(this).data('payment-id');
+        document.getElementById('confirmDeletePaymentBtn').addEventListener('click', function() {
+            const paymentId = this.getAttribute('data-payment-id');
             showProcessing(true);
 
             fetch(`/account/payments/${paymentId}/delete/`, {
@@ -561,11 +1284,10 @@
             .then(response => response.json())
             .then(data => {
                 showProcessing(false);
-                $('#deletePaymentModal').addClass('hidden');
+                hideModal('deletePaymentModal');
 
                 if (data.success) {
                     showNotification(data.message, 'success');
-                    // Reload page to show updated payment methods
                     setTimeout(() => {
                         location.reload();
                     }, 1000);
@@ -575,9 +1297,9 @@
             })
             .catch(error => {
                 showProcessing(false);
-                $('#deletePaymentModal').addClass('hidden');
+                hideModal('deletePaymentModal');
                 console.error('Error:', error);
-                showNotification('An error occurred while deleting the payment method', 'error');
+                showNotification('A ocurrido un error borrando el método de pago', 'error');
             });
         });
 

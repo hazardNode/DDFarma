@@ -54,6 +54,7 @@
     .gallery-container {
         position: relative;
         border-radius: 1rem;
+        height: 635px ;
         overflow: hidden;
         box-shadow:
             0 10px 25px -5px rgba(0, 0, 0, 0.1),
@@ -104,6 +105,7 @@
 
     .thumbnail {
         position: relative;
+        margin-left: 0.75rem;
         width: 100%;
         aspect-ratio: 1/1;
         border-radius: 0.5rem;
@@ -594,7 +596,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
             </svg>
-            Back to Shop
+           Volver a la Tienda
         </a>
     </div>
 
@@ -638,26 +640,20 @@
                 <div class="product-price">{{ product.price }}</div>
 
                 <!-- Product Description -->
-                <div class="section-title">Description</div>
+                <div class="section-title">Descripción</div>
                 <div class="product-description">
                     {{ product.description|default:"No description available." }}
                 </div>
 
                 <!-- Product Details -->
                 <div class="product-details">
-                    <div class="section-title">Product Details</div>
+                    <div class="section-title">Detalles del Producto</div>
                     <ul class="detail-list">
-                        <li class="detail-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1z" clip-rule="evenodd" />
-                            </svg>
-                            <span>SKU: <span class="detail-highlight">{{ product.sku }}</span></span>
-                        </li>
                         <li class="detail-item">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                             </svg>
-                            <span>Category: <span class="detail-highlight">{{ product.category.name }}</span></span>
+                            <span>Categoria: <span class="detail-highlight">{{ product.category.name }}</span></span>
                         </li>
                         <li class="detail-item">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -666,11 +662,11 @@
                             </svg>
                             <span>Stock:
                                 {% if product.stock_quantity > 10 %}
-                                <span class="stock-indicator in-stock">In Stock ({{ product.stock_quantity }} available)</span>
+                                <span class="stock-indicator in-stock">En Stock</span>
                                 {% elif product.stock_quantity > 0 %}
-                                <span class="stock-indicator low-stock">Low Stock ({{ product.stock_quantity }} left)</span>
+                                <span class="stock-indicator low-stock">Bajo Stock</span>
                                 {% else %}
-                                <span class="stock-indicator out-of-stock">Out of Stock</span>
+                                <span class="stock-indicator out-of-stock">Sin Stock</span>
                                 {% endif %}
                             </span>
                         </li>
@@ -679,7 +675,7 @@
 
                 <!-- Add to Cart Form -->
                 <div class="quantity-selector">
-                    <span class="quantity-label">Quantity:</span>
+                    <span class="quantity-label">Cantidad:</span>
                     <div class="quantity-control">
                         <button type="button" id="decrement-btn" class="quantity-btn">−</button>
                         <input type="number" id="product-quantity" class="quantity-input" min="1" max="{{ product.stock_quantity }}" value="1">
@@ -692,7 +688,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                     </svg>
-                    Add to Cart
+                    Añadir al Carrito
                     {% else %}
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -705,7 +701,7 @@
 
         <!-- Related Products Section -->
         <div class="related-section">
-            <h2 class="related-title">Related Products</h2>
+            <h2 class="related-title">Productos Relacionados</h2>
             <div class="related-grid">
                 {% for related_product in related_products %}
                 <div class="related-card">

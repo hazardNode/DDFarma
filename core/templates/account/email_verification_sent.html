@@ -2,112 +2,532 @@
 
 {% block title %}Manage Emails - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+    }
+
+    @keyframes shine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Page container styles */
+    .email-sent-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* Card styles */
+    .email-sent-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow:
+            0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        padding: 3rem 2rem;
+        max-width: 32rem;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        animation: slideIn 0.8s ease-out;
+    }
+
+    .email-sent-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #06b6d4, #0891b2, #0e7490, #06b6d4);
+        background-size: 200% 100%;
+        animation: shine 3s linear infinite;
+    }
+
+    /* Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-icon {
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 25px -5px rgba(6, 182, 212, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .page-icon svg {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    /* Message styles */
+    .message {
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .message svg {
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+
+    .message.success {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #22c55e;
+        color: #166534;
+    }
+
+    .message.error {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 1px solid #ef4444;
+        color: #991b1b;
+    }
+
+    .message.info {
+        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        border: 1px solid #06b6d4;
+        color: #0e7490;
+    }
+
+    /* Email list styles */
+    .email-list {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title svg {
+        margin-right: 0.5rem;
+        color: #06b6d4;
+    }
+
+    .email-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: white;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .email-item:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 10px 25px -5px rgba(0, 0, 0, 0.1),
+            0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    .email-info {
+        flex-grow: 1;
+    }
+
+    .email-address {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .email-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge.primary {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge.verified {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+
+    .badge.unverified {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .email-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        background: none;
+        text-decoration: none;
+    }
+
+    .action-btn.primary {
+        color: #06b6d4;
+        background-color: #ecfeff;
+    }
+
+    .action-btn.primary:hover {
+        color: #0891b2;
+        background-color: #cffafe;
+    }
+
+    .action-btn.verify {
+        color: #059669;
+        background-color: #ecfdf5;
+    }
+
+    .action-btn.verify:hover {
+        color: #047857;
+        background-color: #d1fae5;
+    }
+
+    .action-btn.remove {
+        color: #ef4444;
+        background-color: #fef2f2;
+    }
+
+    .action-btn.remove:hover {
+        color: #dc2626;
+        background-color: #fee2e2;
+    }
+
+    /* Warning section */
+    .warning-section {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 1px solid #fbbf24;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .warning-section svg {
+        margin-right: 0.75rem;
+        color: #f59e0b;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+
+    .warning-section p {
+        color: #92400e;
+        font-size: 0.875rem;
+    }
+
+    /* Form styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        pointer-events: none;
+    }
+
+    .add-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(90deg, #06b6d4, #0891b2);
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        box-shadow:
+            0 4px 6px -1px rgba(6, 182, 212, 0.2),
+            0 2px 4px -1px rgba(6, 182, 212, 0.1);
+    }
+
+    .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 10px 15px -3px rgba(6, 182, 212, 0.3),
+            0 4px 6px -2px rgba(6, 182, 212, 0.1);
+    }
+
+    .add-btn::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 70px;
+        height: 200%;
+        background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(25deg);
+        transition: all 0.6s ease;
+    }
+
+    .add-btn:hover::after {
+        left: 200%;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .email-sent-card {
+            padding: 2rem 1.5rem;
+            margin: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .email-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .email-actions {
+            margin-left: 0;
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Emails</h2>
-
-    {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-            <div class="{% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} p-4 rounded-md mb-2">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Existing Emails -->
-    {% if user.emailaddress_set.all %}
-    <div class="mb-8">
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">Current Emails</h3>
-        <ul class="divide-y divide-gray-200">
-            {% for email in user.emailaddress_set.all %}
-            <li class="py-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-900">{{ email.email }}</p>
-                        <div class="mt-1 flex items-center">
-                            {% if email.primary %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">Primary</span>{% endif %}
-                            {% if email.verified %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>{% else %}<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Unverified</span>{% endif %}
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        {% if not email.primary %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_primary" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
-                                Make Primary
-                            </button>
-                        </form>
-                        {% endif %}
-                        
-                        {% if not email.verified %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_send" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
-                                Resend Verification
-                            </button>
-                        </form>
-                        {% endif %}
-                        
-                        {% if not email.primary or user.emailaddress_set.count > 1 %}
-                        <form method="post" action="{% url 'account_email' %}" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="email" value="{{ email.email }}">
-                            <button type="submit" name="action_remove" class="text-sm text-red-600 hover:text-red-800 focus:outline-none">
-                                Remove
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% else %}
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+<div class="email-sent-container">
+    <div class="email-sent-card">
+        <div class="page-header">
+            <div class="page-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
             </div>
-            <div class="ml-3">
-                <p class="text-sm text-yellow-700">
-                    You don't have any email addresses configured. Please add one below.
-                </p>
-            </div>
+            <h2 class="page-title">Gestion de Correo Electrónico</h2>
         </div>
-    </div>
-    {% endif %}
 
-    <!-- Add New Email Form -->
-    <form method="post" action="{% url 'account_email' %}" class="space-y-4">
-        {% csrf_token %}
-        <div>
-            <label for="id_email" class="block text-sm font-medium text-gray-700">Add New Email</label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
+        <!-- Messages -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}">
+            {% if message.tags == 'success' %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            {% elif message.tags == 'error' %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            {% else %}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            {% endif %}
+            <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Existing Emails -->
+        {% if user.emailaddress_set.all %}
+        <div class="email-list">
+            <h3 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                Correo Electrónico Actual
+            </h3>
+            {% for email in user.emailaddress_set.all %}
+            <div class="email-item">
+                <div class="email-info">
+                    <div class="email-address">{{ email.email }}</div>
+                    <div class="email-badges">
+                        {% if email.primary %}
+                        <span class="badge primary">Primary</span>
+                        {% endif %}
+                        {% if email.verified %}
+                        <span class="badge verified">Verified</span>
+                        {% else %}
+                        <span class="badge unverified">Unverified</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <input type="email" name="email" id="id_email" required
-                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                    placeholder="your.email@example.com">
+                <div class="email-actions">
+                    {% if not email.primary %}
+                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ email.email }}">
+                        <button type="submit" name="action_primary" class="action-btn primary">
+                            Hacer Principal
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if not email.verified %}
+                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ email.email }}">
+                        <button type="submit" name="action_send" class="action-btn verify">
+                            Reenviar Verificación
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if not email.primary or user.emailaddress_set.count > 1 %}
+                    <form method="post" action="{% url 'account_email' %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" value="{{ email.email }}">
+                        <button type="submit" name="action_remove" class="action-btn remove">
+                            Quitar
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
+            {% endfor %}
         </div>
-        
-        <div>
-            <button type="submit" name="action_add" 
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Add Email
+        {% else %}
+        <div class="warning-section">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            <p>No tienes ningun Correo Electrónico Configurado. Por favor añade uno en la siguiente sección</p>
+        </div>
+        {% endif %}
+
+        <!-- Add New Email Form -->
+        <form method="post" action="{% url 'account_email' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_email" class="form-label">Añadir nuevo Correo Electronico</label>
+                <div style="position: relative;">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                    </div>
+                    <input type="email" name="email" id="id_email" required class="form-input" placeholder="tu.email@ejemplo.com">
+                </div>
+            </div>
+
+            <button type="submit" name="action_add" class="add-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Añadir Correo Electrónico
             </button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 {% endblock %}
