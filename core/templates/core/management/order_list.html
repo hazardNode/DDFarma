@@ -412,41 +412,83 @@
 
         <!-- Bulk Receipt Download Section -->
         {% if orders %}
-        <div id="bulk-receipts" class="bulk-section p-8 mt-10">
-            <h2 class="bulk-title text-xl">Bulk Download Receipts</h2>
+<div id="bulk-receipts" class="bulk-section p-8 mt-10">
+    <h2 class="bulk-title text-xl">Bulk Download Receipts</h2>
 
-            <form method="get" action="{% url 'bulk_download_receipts' %}" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="md:col-span-1">
-                        <label class="flex items-center space-x-3">
-                            <input type="checkbox" name="all" value="true" class="form-checkbox">
-                            <span class="text-gray-700 font-medium">All Orders</span>
-                        </label>
-                    </div>
+    <form method="get" action="{% url 'bulk_download_receipts' %}" class="space-y-6" id="bulk-download-form">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="md:col-span-1">
+                <label class="flex items-center space-x-3">
+                    <input type="checkbox" name="all" value="true" class="form-checkbox" id="all-orders-checkbox">
+                    <span class="text-gray-700 font-medium">All Orders</span>
+                </label>
+            </div>
 
-                    <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">From Date:</label>
-                            <input type="date" name="start_date" class="form-control w-full" placeholder="YYYY-MM-DD">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">To Date:</label>
-                            <input type="date" name="end_date" class="form-control w-full" placeholder="YYYY-MM-DD">
-                        </div>
-                    </div>
-                </div>
-
+            <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6" id="date-range-section">
                 <div>
-                    <button type="submit" class="submit-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Download Selected Receipts
-                    </button>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">From Date:</label>
+                    <input type="date" name="start_date" class="form-control w-full" id="start-date">
                 </div>
-            </form>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">To Date:</label>
+                    <input type="date" name="end_date" class="form-control w-full" id="end-date">
+                </div>
+            </div>
         </div>
-        {% endif %}
+
+        <div>
+            <button type="submit" class="submit-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Download Selected Receipts
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allCheckbox = document.getElementById('all-orders-checkbox');
+    const dateRangeSection = document.getElementById('date-range-section');
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const form = document.getElementById('bulk-download-form');
+
+    // Toggle date inputs based on "All Orders" checkbox
+    allCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            dateRangeSection.style.opacity = '0.5';
+            startDateInput.disabled = true;
+            endDateInput.disabled = true;
+        } else {
+            dateRangeSection.style.opacity = '1';
+            startDateInput.disabled = false;
+            endDateInput.disabled = false;
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const allOrders = allCheckbox.checked;
+        const startDate = startDateInput.value;
+        const endDate = startDateInput.value;
+
+        if (!allOrders && !startDate && !endDate) {
+            e.preventDefault();
+            alert('Please select "All Orders" or provide at least one date.');
+            return false;
+        }
+
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            e.preventDefault();
+            alert('Start date cannot be later than end date.');
+            return false;
+        }
+    });
+});
+</script>
+{% endif %}
     </div>
 </div>
 {% endblock %}

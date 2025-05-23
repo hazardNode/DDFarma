@@ -7,8 +7,10 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from allauth.account.views import ConfirmEmailView, PasswordResetView, PasswordResetFromKeyView
 from django.contrib import messages
 from .cart import Cart
+from django.views.generic.edit import FormView
 from core.models import Product, Order, Category, User, ProductImage, PaymentMethod, Address, ShippingMethod, OrderItem
-from core.forms import ProductForm, CategoryForm, UserForm, UserProfileForm, ProductImageForm, MultipleImageUploadForm
+from core.forms import ProductForm, CategoryForm, UserForm, UserProfileForm, ProductImageForm, MultipleImageUploadForm, CustomResetPasswordKeyForm
+from django import forms
 from .stripe_utils import create_payment_method, delete_payment_method, set_default_payment_method, create_stripe_customer
 import json
 import stripe
@@ -18,6 +20,10 @@ from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
 from decimal import Decimal
+from allauth.account.utils import url_str_to_user_pk
+from allauth.account.utils import user_pk_to_url_str
+from django.contrib.auth import get_user_model
+from allauth.account.forms import default_token_generator
 
 def product_list(request):
     products = Product.objects.all()
@@ -1160,15 +1166,21 @@ class CustomPasswordResetView(PasswordResetView):
     template_name = 'account/password_reset.html'
 
     def form_valid(self, form):
-        # Handle AJAX requests with JSON response
+        """Override form_valid to add debugging for token generation"""
+        # For AJAX requests, handle the success differently
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             email = form.cleaned_data["email"]
-            form.save(self.request)
+
+            # Call the parent's form_valid which will send the email
+            # but store the response first to make sure it completes
+            response = super().form_valid(form)
+
             return JsonResponse({
                 'success': True,
                 'message': f'If an account with email {email} exists, password reset instructions have been sent.',
                 'email': email
             })
+
         # For non-AJAX, use default behavior
         return super().form_valid(form)
 
@@ -1189,29 +1201,247 @@ class CustomPasswordResetView(PasswordResetView):
 
 class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
     template_name = 'account/password_reset_from_key.html'
+    form_class = CustomResetPasswordKeyForm  # Use our custom form
+
+    def get_success_url(self):
+        """Override to return /account/login/ for our use"""
+        return '/account/login/'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Print session keys for debugging
+        print(f"DEBUG: Session keys: {list(request.session.keys())}")
+
+        # Handle the first part - token validation and redirect to set-password URL
+        response = super().dispatch(request, *args, **kwargs)
+
+        # After the parent dispatch, check if token_fail was set
+        token_fail = getattr(self, 'validlink', None) is False
+        print(f"DEBUG: After parent dispatch - token_fail: {token_fail}, validlink: {getattr(self, 'validlink', None)}")
+
+        # If we're using set-password, check if we have the user
+        if kwargs.get('key') == 'set-password':
+            has_user = hasattr(self, 'reset_user') and self.reset_user is not None
+            print(f"DEBUG: In set-password URL, has_user: {has_user}")
+
+            # Explicitly check for the session variable that AllAuth uses
+            session_user = request.session.get('_password_reset_key_user', None)
+            print(f"DEBUG: _password_reset_key_user in session: {session_user is not None}")
+
+            # If we have no user but the session has it, try to set it
+            if not has_user and session_user is not None:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                try:
+                    user_id = session_user[0]
+                    self.reset_user = User.objects.get(pk=user_id)
+                    print(f"DEBUG: Set reset_user from session: {self.reset_user}")
+                    self.validlink = True
+                except Exception as e:
+                    print(f"DEBUG: Error setting user from session: {str(e)}")
+                    self.validlink = False
+
+        return response
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Always use validlink attribute for consistency
+        token_fail = not getattr(self, 'validlink', False)
+        print(f"DEBUG: Setting token_fail={token_fail} in context")
+        context['token_fail'] = token_fail
+
+        # Check the state we ended up with
+        print(
+            f"DEBUG: Final state - validlink: {getattr(self, 'validlink', None)}, reset_user: {hasattr(self, 'reset_user')}")
+
+        return context
 
     def form_valid(self, form):
-        # Handle AJAX requests with JSON response
+        """Override form_valid to return JSON for AJAX requests"""
+        print(f"DEBUG: Form valid called, reset_user: {getattr(self, 'reset_user', None)}")
+
+        # For AJAX requests, handle the success differently
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form.save()
-            return JsonResponse({
-                'success': True,
-                'message': 'Your password has been successfully reset! You can now log in with your new password.',
-                'redirect_url': 'account/login/'
-            })
-        # For non-AJAX, use default behavior
-        return super().form_valid(form)
+            try:
+                # Save the new password
+                form.save()
+                print("DEBUG: Password successfully saved")
+
+                # If we get here, the password was saved successfully
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Your password has been successfully reset! You can now log in with your new password.',
+                    'redirect_url': '/account/login/'
+                })
+            except Exception as e:
+                print(f"DEBUG: Error saving password: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'An error occurred while resetting your password: {str(e)}'
+                }, status=500)
+
+        # For non-AJAX requests, use parent behavior
+        response = super().form_valid(form)
+        messages.success(self.request, 'Your password has been successfully reset!')
+        return redirect('/account/login/')
 
     def form_invalid(self, form):
-        # Handle AJAX requests with JSON response
+        """Override form_invalid to return JSON for AJAX requests"""
+        print(f"DEBUG: Form invalid called with errors: {form.errors}")
+
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            errors = {}
+
+            # Get field errors
+            for field, error_list in form.errors.items():
+                errors[field] = [str(error) for error in error_list]
+                print(f"DEBUG: Form error on field {field}: {error_list}")
+
+            # Check for non-field errors (like token issues)
+            non_field_errors = []
+            if form.non_field_errors():
+                non_field_errors = [str(error) for error in form.non_field_errors()]
+                print(f"DEBUG: Non-field errors: {non_field_errors}")
+
+            return JsonResponse({
+                'success': False,
+                'errors': errors,
+                'non_field_errors': non_field_errors,
+                'message': 'Please correct the errors below.' if errors else
+                non_field_errors[0] if non_field_errors else
+                'An error occurred during password reset.'
+            }, status=400)
+
+        # For non-AJAX requests, use parent behavior
+        return super().form_invalid(form)
+
+class SimplePasswordResetForm(forms.Form):
+    password1 = forms.CharField(
+        label="New Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Enter your new password'}),
+        required=True
+    )
+    password2 = forms.CharField(
+        label="Confirm New Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirm your new password'}),
+        required=True
+    )
+
+    def __init__(self, user=None, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError("The two password fields didn't match.")
+        return password2
+
+    def save(self):
+        password = self.cleaned_data["password1"]
+        self.user.set_password(password)
+        self.user.save()
+        return self.user
+
+
+# Single-step password reset view
+class SimplePasswordResetFromKeyView(FormView):
+    template_name = 'account/password_reset_from_key.html'
+    form_class = SimplePasswordResetForm
+
+    def dispatch(self, request, *args, **kwargs):
+        uidb36 = kwargs.get('uidb36')
+        key = kwargs.get('key')
+
+        print(f"DEBUG: Simple reset with uidb36={uidb36} and key={key}")
+
+        # Validate the token directly
+        try:
+            User = get_user_model()
+            user_pk = url_str_to_user_pk(uidb36)
+            self.user = User.objects.get(pk=user_pk)
+            valid = default_token_generator.check_token(self.user, key)
+
+            print(f"DEBUG: Token validation result: {valid}")
+
+            if not valid:
+                self.validlink = False
+                print("DEBUG: Invalid token")
+            else:
+                self.validlink = True
+                print(f"DEBUG: Valid token for user {self.user}")
+        except Exception as e:
+            self.validlink = False
+            self.user = None
+            print(f"DEBUG: Error validating token: {str(e)}")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass the user to the form
+        kwargs['user'] = getattr(self, 'user', None)
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['token_fail'] = not getattr(self, 'validlink', False)
+        return context
+
+    def form_valid(self, form):
+        # For AJAX requests
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                user = form.save()
+                print(f"DEBUG: Password successfully reset for {user}")
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Your password has been successfully reset! You can now log in with your new password.',
+                    'redirect_url': '/account/login/'
+                })
+            except Exception as e:
+                print(f"DEBUG: Error saving password: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'An error occurred while resetting your password: {str(e)}'
+                }, status=500)
+
+        # For non-AJAX requests
+        form.save()
+        messages.success(self.request, 'Your password has been successfully reset!')
+        return redirect('/account/login/')
+
+    def form_invalid(self, form):
+        print(f"DEBUG: Form errors: {form.errors}")
+
+        # For AJAX requests
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             errors = {}
             for field, error_list in form.errors.items():
-                errors[field] = error_list
+                errors[field] = [str(error) for error in error_list]
+
             return JsonResponse({
                 'success': False,
                 'errors': errors,
                 'message': 'Please correct the errors below.'
             }, status=400)
-        # For non-AJAX, use default behavior
+
+        # For non-AJAX requests
         return super().form_invalid(form)
+
+
+def blocked_view(request, *args, **kwargs):
+    """Redirect blocked URLs to landing page with message"""
+    # You can use different message types:
+    # messages.error(request, "Access denied to this page.")
+    # messages.info(request, "This feature is currently unavailable.")
+    # messages.success(request, "Redirected to home page.")
+
+    messages.warning(request, "Sorry, that page is not available. You've been redirected to the home page.")
+    return redirect('landing_page')
+
+# Add this debug view to your views.py to check authentication status

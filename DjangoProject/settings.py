@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-tijn+#@d$vs+8u6n0e#51!x1=j2ir##wbhqu=r!rqv_(tr9xmv
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+#'10.20.30.111'
 
 # Application definition
 
@@ -178,3 +178,9 @@ ACCOUNT_ADAPTER = 'core.adapters.CustomAccountAdapter'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'core', 'media')
+
+# Add this to your settings.py
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
+
+# Ensure you're using the standard Django token generator
+ACCOUNT_DEFAULT_TOKEN_GENERATOR = 'django.contrib.auth.tokens.default_token_generator'

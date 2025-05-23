@@ -145,56 +145,116 @@ def download_receipt(request, order_id):
 
 
 # Add to core/receipts.py
+# core/receipts.py - Fixed bulk_download_receipts function
 def bulk_download_receipts(request):
     """Download multiple receipts as a ZIP file"""
-    if not request.user.is_staff:
+    if request.user.role == "ADMIN":
         return HttpResponse("Unauthorized", status=403)
 
     # Get parameters
     all_orders = request.GET.get('all') == 'true'
-    try:
-        start_date = datetime.strptime(request.GET.get('start_date', ''), '%Y-%m-%d') if request.GET.get(
-            'start_date') else None
-        end_date = datetime.strptime(request.GET.get('end_date', ''), '%Y-%m-%d') if request.GET.get(
-            'end_date') else None
-    except ValueError:
-        return HttpResponse("Invalid date format", status=400)
+    start_date = None
+    end_date = None
 
-    # Query orders
+    # Handle date parsing more safely
+    try:
+        start_date_str = request.GET.get('start_date', '').strip()
+        end_date_str = request.GET.get('end_date', '').strip()
+
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+    except ValueError as e:
+        return HttpResponse(f"Invalid date format: {str(e)}", status=400)
+
+    # Query orders with better logic
     orders = Order.objects.all()
-    if not all_orders and start_date and end_date:
-        orders = orders.filter(order_date__range=[start_date, end_date])
+
+    if all_orders:
+        # Download all orders
+        pass  # orders already contains all orders
+    elif start_date and end_date:
+        # Filter by date range
+        orders = orders.filter(order_date__date__range=[start_date, end_date])
+    elif start_date:
+        # Filter from start_date onwards
+        orders = orders.filter(order_date__date__gte=start_date)
+    elif end_date:
+        # Filter up to end_date
+        orders = orders.filter(order_date__date__lte=end_date)
+    else:
+        # If no criteria provided and not "all", return error
+        return HttpResponse("Please select 'All Orders' or provide date range", status=400)
 
     if not orders.exists():
         return HttpResponse("No orders found for the selected criteria", status=404)
 
     # Create a ZIP file in memory
     buffer = BytesIO()
-    with zipfile.ZipFile(buffer, 'w') as zip_file:
-        for order in orders:
-            # Get or create receipt
-            receipt, created = Receipt.objects.get_or_create(
-                order=order,
-                defaults={
-                    'subtotal': sum(item.price_at_purchase * item.quantity for item in order.items.all()),
-                    'tax_amount': order.total_amount * 0.1,  # Assuming 10% tax
-                    'shipping_cost': order.shipping_method.cost,
-                    'total_amount': order.total_amount,
-                    'billing_name': f"{order.user.first_name} {order.user.last_name}",
-                    'billing_address': order.shipping_address.street,
-                    'billing_city': order.shipping_address.city,
-                    'billing_province': order.shipping_address.province,
-                    'billing_postal_code': order.shipping_address.postal_code,
-                    'payment_method': order.payment_set.first().payment_method if order.payment_set.exists() else "Unknown",
-                    'payment_transaction_id': order.payment_set.first().transaction_id if order.payment_set.exists() else None,
-                }
-            )
+    try:
+        with zipfile.ZipFile(buffer, 'w') as zip_file:
+            for order in orders:
+                try:
+                    # Calculate subtotal properly
+                    subtotal = sum(item.price_at_purchase * item.quantity for item in order.items.all())
 
-            # Generate PDF
-            pdf_buffer = generate_receipt_pdf(receipt)
+                    # Get payment method info correctly
+                    payment_method_name = "Unknown"
+                    payment_transaction_id = None
 
-            # Add to ZIP
-            zip_file.writestr(f"receipt_{receipt.receipt_number}.pdf", pdf_buffer.getvalue())
+                    # Try to get payment method from the order's payment_method field
+                    if order.payment_method:
+                        payment_method_name = order.payment_method.display_name
+
+                    # Try to get transaction ID from related Payment objects
+                    payment_obj = order.payment_set.first() if hasattr(order, 'payment_set') else None
+                    if payment_obj:
+                        payment_transaction_id = payment_obj.transaction_id
+                    elif order.stripe_payment_intent_id:
+                        payment_transaction_id = order.stripe_payment_intent_id
+
+                    # Get shipping cost
+                    shipping_cost = order.shipping_cost if order.shipping_cost else Decimal('0.00')
+
+                    # Calculate tax (you may want to adjust this logic)
+                    tax_amount = order.total_amount - subtotal - shipping_cost
+                    if tax_amount < 0:
+                        tax_amount = Decimal('0.00')
+
+                    # Get or create receipt
+                    receipt, created = Receipt.objects.get_or_create(
+                        order=order,
+                        defaults={
+                            'subtotal': subtotal,
+                            'tax_amount': tax_amount,
+                            'shipping_cost': shipping_cost,
+                            'total_amount': order.total_amount,
+                            'billing_name': f"{order.user.first_name} {order.user.last_name}".strip() or order.user.email,
+                            'billing_address': order.billing_address.street if order.billing_address else order.shipping_address.street,
+                            'billing_city': order.billing_address.city if order.billing_address else order.shipping_address.city,
+                            'billing_province': order.billing_address.province if order.billing_address else order.shipping_address.province,
+                            'billing_postal_code': order.billing_address.postal_code if order.billing_address else order.shipping_address.postal_code,
+                            'payment_method': payment_method_name,
+                            'payment_transaction_id': payment_transaction_id,
+                        }
+                    )
+
+                    # Generate PDF
+                    pdf_buffer = generate_receipt_pdf(receipt)
+
+                    # Add to ZIP with a safe filename
+                    safe_filename = f"receipt_order_{order.id}_{receipt.receipt_number}.pdf"
+                    zip_file.writestr(safe_filename, pdf_buffer.getvalue())
+
+                except Exception as e:
+                    # Log the error but continue processing other orders
+                    print(f"Error processing order {order.id}: {str(e)}")
+                    continue
+
+    except Exception as e:
+        return HttpResponse(f"Error creating ZIP file: {str(e)}", status=500)
 
     # Return ZIP file
     buffer.seek(0)

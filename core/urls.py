@@ -62,5 +62,5 @@ urlpatterns = [
     path('checkout/create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
     path('checkout/complete/', views.checkout_complete, name='checkout_complete'),
     path('orders/<int:order_id>/confirmation/', views.order_confirmation, name='order_confirmation'),
-
+# In urls.py
 ]

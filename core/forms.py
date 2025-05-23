@@ -2,6 +2,7 @@
 from django import forms
 from allauth.account.forms import SignupForm
 from core.models import Product, Supplier, Category, User, ProductImage
+from allauth.account.forms import ResetPasswordKeyForm
 
 
 # Custom widget for multiple file uploads
@@ -86,3 +87,18 @@ class UserProfileForm(forms.ModelForm):
             'first_name': 'First Name',
             'last_name': 'Last Name',
         }
+
+
+class CustomResetPasswordKeyForm(ResetPasswordKeyForm):
+    """Custom form to handle debugging and add any customizations"""
+
+    def clean(self):
+        """Debug what's happening in the validation"""
+        print(f"DEBUG: Form clean called with fields: {self.cleaned_data}")
+        try:
+            cleaned_data = super().clean()
+            print(f"DEBUG: Parent clean succeeded: {cleaned_data}")
+            return cleaned_data
+        except Exception as e:
+            print(f"DEBUG: Error in parent clean: {str(e)}")
+            raise
