@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Order Confirmed - {{ block.super }}{% endblock %}
+{% block title %}Pedido Confirmado - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -738,7 +738,7 @@
                                     <td data-label="Product">
                                         <div class="product-cell">
                                             {% if item.product.primary_image %}
-                                                <img class="product-image" src="{{ item.product.primary_image.url }}" alt="{{ item.product.name }}">
+                                                <img class="product-image" src="{% url 'product_image' item.product.primary_image.id %}" alt="{{ item.product.name }}">
                                             {% else %}
                                                 <div class="product-image bg-gray-200"></div>
                                             {% endif %}

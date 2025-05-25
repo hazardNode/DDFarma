@@ -1,10 +1,7 @@
 # Update your main urls.py file
 
 from allauth.account.views import SignupView
-from django.contrib import admin
 from django.urls import path, include, re_path
-from django.conf import settings
-from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -78,6 +75,3 @@ handler404 = 'core.error_handlers.handler404'
 handler403 = 'core.error_handlers.handler403'
 handler500 = 'core.error_handlers.handler500'
 handler400 = 'core.error_handlers.handler400'
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

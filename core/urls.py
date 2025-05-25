@@ -1,11 +1,14 @@
 # core/urls.py
 from django.urls import path
-
 from core import views, receipts
+
+from django.http import HttpResponse
+from core.models import ProductImage
 
 urlpatterns = [
     # Management Dashboard
     path('management/', views.management_dashboard, name='management_dashboard'),
+
     # Products
     path('management/products/', views.product_list, name='product_list'),
     path('management/products/new/', views.product_create, name='product_create'),
@@ -31,6 +34,7 @@ urlpatterns = [
     path('management/users/<int:pk>/edit/', views.user_update, name='user_update'),
     path('account/orders/', views.order_history, name='order_history'),
     path('account/orders/<int:order_id>/receipt/', receipts.download_receipt, name='user_download_receipt'),
+
     # Address Management
     path('account/addresses/', views.address_management, name='address_management'),
     path('account/addresses/create/', views.address_create, name='address_create'),
@@ -45,7 +49,7 @@ urlpatterns = [
     path('account/payments/<int:payment_id>/delete/', views.payment_delete, name='payment_delete'),
     path('account/payments/<int:payment_id>/default/', views.payment_set_default, name='payment_set_default'),
 
-
+    # Main site
     path('', views.landing_page, name='landing_page'),
     path('shop/', views.shop, name='shop'),
     path('shop/<int:product_id>/', views.product_detail, name='product_detail'),
@@ -55,6 +59,7 @@ urlpatterns = [
     path('cart/update-ajax/', views.cart_update_ajax, name='cart_update_ajax'),
     path('cart/count/', views.get_cart_count, name='get_cart_count'),
     path('cart/remove/<int:product_id>/', views.cart_remove, name='cart_remove'),
+
     # Checkout related URLs
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/address-save/', views.checkout_address_save, name='checkout_address_save'),
@@ -62,5 +67,17 @@ urlpatterns = [
     path('checkout/create-payment-intent/', views.create_payment_intent, name='create_payment_intent'),
     path('checkout/complete/', views.checkout_complete, name='checkout_complete'),
     path('orders/<int:order_id>/confirmation/', views.order_confirmation, name='order_confirmation'),
-# In urls.py
+
+    # SECURE MEDIA SERVING URLs - Replace direct media access
+    # Debug view (remove this after testing)
+    path('debug-image/<int:image_id>/', views.debug_product_image, name='debug_product_image'),
+
+    # Secure media files (with authentication/permission checks)
+    path('secure-media/<path:file_path>/', views.serve_media, name='secure_media'),
+
+    # Public product images (no authentication required for shop display)
+    path('product-image/<int:image_id>/', views.serve_product_image, name='product_image'),
+    path('faq/', views.faq, name='faq'),
+    path('acerca-de/', views.about_us, name='about_us'),
 ]
+

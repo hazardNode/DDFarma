@@ -611,7 +611,7 @@
                     {% if product.images.exists %}
                         {% with primary=product.primary_image %}
                             {% if primary %}
-                                <img id="main-product-image" src="{{ primary.image.url }}" alt="{{ product.name }}" class="main-image">
+                                <img id="main-product-image" src="{% url 'product_image' primary.id %}" alt="{{ product.name }}" class="main-image">
                             {% else %}
                                 <img id="main-product-image" src="https://via.placeholder.com/800x800?text=No+Image" alt="{{ product.name }}" class="main-image">
                             {% endif %}
@@ -625,8 +625,8 @@
                 {% if product.images.count > 1 %}
                 <div class="grid grid-cols-5 gap-3 mt-2">
                     {% for img in product.images.all %}
-                    <div class="thumbnail {% if img.is_primary %}active{% endif %} product-thumbnail" data-full-img="{{ img.image.url }}">
-                        <img src="{{ img.image.url }}" alt="{{ product.name }}" class="thumbnail-img">
+                    <div class="thumbnail {% if img.is_primary %}active{% endif %} product-thumbnail" data-full-img="{% url 'product_image' img.id %}">
+                        <img src="{% url 'product_image' img.id %}" alt="{{ product.name }}" class="thumbnail-img">
                     </div>
                     {% endfor %}
                 </div>

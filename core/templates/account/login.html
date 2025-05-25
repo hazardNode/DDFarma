@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Login - {{ block.super }}{% endblock %}
+{% block title %}Entrar - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -382,13 +382,13 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h2 class="auth-title">Welcome Back</h2>
-        <p class="auth-subtitle">Sign in to your DDFarma account</p>
+        <h2 class="auth-title">Bienvenido de vuelta</h2>
+        <p class="auth-subtitle">Inicia Sesión con tu cuenta de DDFarma</p>
 
         <!-- Display form-wide errors -->
         {% if form.errors %}
         <div class="error-container">
-            <p class="error-title">Please correct the errors below:</p>
+            <p class="error-title">Por favor corrige los errores:</p>
             {% for error in form.non_field_errors %}
             <p class="error-message">{{ error }}</p>
             {% endfor %}
@@ -400,7 +400,7 @@
 
             <!-- Email Field -->
             <div class="form-group">
-                <label for="id_login" class="form-label">Email Address</label>
+                <label for="id_login" class="form-label">Email</label>
                 <input type="email"
                        name="login"
                        id="id_login"
@@ -418,7 +418,7 @@
 
             <!-- Password Field -->
             <div class="form-group">
-                <label for="id_password" class="form-label">Password</label>
+                <label for="id_password" class="form-label">Contraseña</label>
                 <input type="password"
                        name="password"
                        id="id_password"
@@ -441,26 +441,26 @@
                        name="remember"
                        id="id_remember"
                        class="checkbox-input">
-                <label for="id_remember" class="checkbox-label">Remember me</label>
+                <label for="id_remember" class="checkbox-label">Recuérdame</label>
             </div>
             {% endif %}
 
             <!-- Forgot Password Link -->
             <div class="utility-links">
-                <a href="{% url 'account_reset_password' %}" class="forgot-link">Forgot your password?</a>
+                <a href="{% url 'account_reset_password' %}" class="forgot-link">¿Olvidaste Tu Contraseña?</a>
             </div>
 
             <!-- Submit Button -->
             <button type="submit" class="auth-button">
-                Sign In
+                Iniciar Sesión
             </button>
         </form>
 
         <!-- Sign-Up Link -->
         <div class="auth-link-container">
             <p class="auth-link-text">
-                Don't have an account?
-                <a href="{% url 'account_signup' %}" class="auth-link">Create Account</a>
+                ¿No tienes Cuenta?
+                <a href="{% url 'account_signup' %}" class="auth-link">Crear Cuenta</a>
             </p>
         </div>
     </div>

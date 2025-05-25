@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Shop - {{ block.super }}{% endblock %}
+{% block title %}Tienda - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
     <style>
@@ -464,7 +464,7 @@
                             <div class="product-image">
                                 {% with primary=product.primary_image %}
                                     {% if primary and primary.image %}
-                                        <img src="{{ primary.image.url }}" alt="{{ product.name }}">
+                                        <img src="{% url 'product_image' primary.id %}" alt="{{ product.name }}">
                                     {% else %}
                                         <img src="https://via.placeholder.com/600x400?text=DDFarma"
                                              alt="{{ product.name }}">

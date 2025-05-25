@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up - {{ block.super }}{% endblock %}
+{% block title %}Registro - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -327,13 +327,13 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h2 class="auth-title">Create Account</h2>
-        <p class="auth-subtitle">Join DDFarma for specialized health supplements</p>
+        <h2 class="auth-title">Ingresar</h2>
+        <p class="auth-subtitle">Unete a DDFarma para suplementos especializados</p>
 
         <!-- Display form-wide errors -->
         {% if form.errors %}
         <div class="error-container">
-            <p class="error-title">Please correct the errors below:</p>
+            <p class="error-title">Por favor corrige los errores:</p>
             {% for error in form.non_field_errors %}
             <p class="error-message">{{ error }}</p>
             {% endfor %}
@@ -345,7 +345,7 @@
 
             <!-- Email Field -->
             <div class="form-group">
-                <label for="id_email" class="form-label">Email Address</label>
+                <label for="id_email" class="form-label">Email</label>
                 <input type="email"
                        name="email"
                        id="id_email"
@@ -363,7 +363,7 @@
 
             <!-- Password Field -->
             <div class="form-group">
-                <label for="id_password1" class="form-label">Password</label>
+                <label for="id_password1" class="form-label">Contraseña</label>
                 <input type="password"
                        name="password1"
                        id="id_password1"
@@ -386,7 +386,7 @@
 
             <!-- Confirm Password Field -->
             <div class="form-group">
-                <label for="id_password2" class="form-label">Confirm Password</label>
+                <label for="id_password2" class="form-label">Confirmar Contraseña</label>
                 <input type="password"
                        name="password2"
                        id="id_password2"
@@ -404,15 +404,15 @@
 
             <!-- Submit Button -->
             <button type="submit" class="auth-button">
-                Create Account
+                Crear Cuenta
             </button>
         </form>
 
         <!-- Login Link -->
         <div class="auth-link-container">
             <p class="auth-link-text">
-                Already have an account?
-                <a href="{% url 'account_login' %}" class="auth-link">Sign In</a>
+                ¿Ya tienes una cuenta?
+                <a href="{% url 'account_login' %}" class="auth-link">Iniciar Sesión</a>
             </p>
         </div>
     </div>

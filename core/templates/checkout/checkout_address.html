@@ -1,1052 +1,1104 @@
 {% extends "base.html" %}
 
-{% block title %}Checkout - Shipping Address - {{ block.super }}{% endblock %}
+{% block title %}Pago - Dirección - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Animation keyframes */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    <style>
+        /* Animation keyframes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        @keyframes shine {
+            0% {
+                background-position: -100% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes progressFill {
+            from {
+                width: 0%;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        /* Page container styles */
+        .checkout-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            min-height: calc(100vh - 4rem);
+            padding: 3rem 0;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Header styles */
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideIn 0.8s ease-out;
+        }
 
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-    }
-
-    @keyframes shine {
-        0% { background-position: -100% 0; }
-        100% { background-position: 200% 0; }
-    }
-
-    @keyframes progressFill {
-        from { width: 0%; }
-        to { width: 100%; }
-    }
-
-    /* Page container styles */
-    .checkout-container {
-        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
-        min-height: calc(100vh - 4rem);
-        padding: 3rem 0;
-        animation: fadeIn 0.8s ease-out;
-    }
-
-    /* Header styles */
-    .checkout-header {
-        text-align: center;
-        margin-bottom: 3rem;
-        animation: slideIn 0.8s ease-out;
-    }
-
-    .checkout-title {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 1rem;
-        position: relative;
-    }
-
-    .checkout-title::after {
-        content: "";
-        position: absolute;
-        bottom: -0.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        border-radius: 9999px;
-    }
-
-    /* Progress indicator */
-    .progress-container {
-        margin-bottom: 3rem;
-        animation: fadeIn 1s ease-out 0.3s both;
-    }
-
-    .progress-wrapper {
-        max-width: 48rem;
-        margin: 0 auto;
-        background: white;
-        border-radius: 1.5rem;
-        padding: 2rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .progress-wrapper::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
-        background-size: 200% 100%;
-        animation: shine 3s linear infinite;
-    }
-
-    .progress-steps {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-    }
-
-    .progress-line {
-        position: absolute;
-        top: 1.25rem;
-        left: 2.5rem;
-        right: 2.5rem;
-        height: 3px;
-        background: #e5e7eb;
-        border-radius: 9999px;
-        z-index: 1;
-    }
-
-    .progress-line-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
-        border-radius: 9999px;
-        width: 0%;
-        animation: progressFill 1s ease-out 0.5s forwards;
-    }
-
-    .progress-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-    }
-
-    .step-circle {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .step-circle.active {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    .step-circle.completed {
-        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
-    }
-
-    .step-circle.inactive {
-        background: #f3f4f6;
-        color: #9ca3af;
-    }
-
-    .step-label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-align: center;
-    }
-
-    .step-label.active {
-        color: #3b82f6;
-    }
-
-    .step-label.completed {
-        color: #22c55e;
-    }
-
-    .step-label.inactive {
-        color: #9ca3af;
-    }
-
-    /* Content cards */
-    .content-card {
-        background: white;
-        border-radius: 1.5rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        overflow: hidden;
-        position: relative;
-        animation: fadeIn 1s ease-out 0.6s both;
-    }
-
-    .content-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
-        background-size: 200% 100%;
-        animation: shine 4s linear infinite;
-    }
-
-    .card-content {
-        padding: 2rem;
-    }
-
-    /* Section headers */
-    .section-header {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-    }
-
-    .section-header svg {
-        margin-right: 0.75rem;
-        color: #3b82f6;
-    }
-
-    /* Address and method selection */
-    .selection-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .selection-item {
-        position: relative;
-    }
-
-    .selection-input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .selection-label {
-        display: block;
-        padding: 1.5rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        background: white;
-    }
-
-    .selection-label:hover {
-        border-color: #93c5fd;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-
-    .selection-input:checked + .selection-label {
-        border-color: #3b82f6;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .address-content h3 {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-    }
-
-    .address-content p {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0.125rem 0;
-    }
-
-    .default-badge {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .method-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .method-name {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .method-price {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: #059669;
-    }
-
-    /* Form elements */
-    .checkbox-wrapper {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .checkbox-input {
-        width: 1rem;
-        height: 1rem;
-        color: #3b82f6;
-        border-color: #d1d5db;
-        border-radius: 0.25rem;
-        margin-right: 0.75rem;
-        transition: all 0.3s ease;
-    }
-
-    .checkbox-input:focus {
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .checkbox-label {
-        color: #374151;
-        font-weight: 500;
-    }
-
-    /* Warning and info sections */
-    .warning-section {
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        border: 1px solid #fbbf24;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: flex-start;
-    }
-
-    .warning-section svg {
-        margin-right: 0.75rem;
-        color: #f59e0b;
-        flex-shrink: 0;
-        margin-top: 0.125rem;
-    }
-
-    .warning-section p {
-        color: #92400e;
-        font-size: 0.875rem;
-    }
-
-    /* Action buttons */
-    .action-link {
-        display: inline-flex;
-        align-items: center;
-        color: #3b82f6;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-
-    .action-link:hover {
-        color: #2563eb;
-        transform: translateY(-1px);
-    }
-
-    .action-link svg {
-        margin-right: 0.5rem;
-    }
-
-    .primary-btn {
-        width: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem 1.5rem;
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 0.75rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-        box-shadow:
-            0 4px 6px -1px rgba(59, 130, 246, 0.2),
-            0 2px 4px -1px rgba(59, 130, 246, 0.1);
-        margin-top: 2rem;
-    }
-
-    .primary-btn:hover {
-        transform: translateY(-2px);
-        box-shadow:
-            0 10px 15px -3px rgba(59, 130, 246, 0.3),
-            0 4px 6px -2px rgba(59, 130, 246, 0.1);
-    }
-
-    .primary-btn::after {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -100%;
-        width: 70px;
-        height: 200%;
-        background: linear-gradient(
-            90deg,
-            rgba(255,255,255,0) 0%,
-            rgba(255,255,255,0.3) 50%,
-            rgba(255,255,255,0) 100%
-        );
-        transform: rotate(25deg);
-        transition: all 0.6s ease;
-    }
-
-    .primary-btn:hover::after {
-        left: 200%;
-    }
-
-    .secondary-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.5rem;
-        background: white;
-        color: #3b82f6;
-        font-weight: 600;
-        border: 2px solid #3b82f6;
-        border-radius: 0.75rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        font-size: 0.875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .secondary-btn:hover {
-        background: #3b82f6;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.3);
-    }
-
-    /* Order summary */
-    .summary-card {
-        background: white;
-        border-radius: 1.5rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        overflow: hidden;
-        position: relative;
-        animation: fadeIn 1s ease-out 0.8s both;
-    }
-
-    .summary-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #059669, #10b981, #34d399, #059669);
-        background-size: 200% 100%;
-        animation: shine 4s linear infinite;
-    }
-
-    .summary-header {
-        padding: 1.5rem 1.5rem 1rem;
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .summary-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1e293b;
-        display: flex;
-        align-items: center;
-    }
-
-    .summary-title svg {
-        margin-right: 0.5rem;
-        color: #059669;
-    }
-
-    .summary-content {
-        padding: 1.5rem;
-    }
-
-    .order-items {
-        margin-bottom: 1.5rem;
-    }
-
-    .order-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        transition: all 0.3s ease;
-    }
-
-    .order-item:hover {
-        background: #f1f5f9;
-        transform: translateY(-1px);
-    }
-
-    .item-image {
-        width: 4rem;
-        height: 4rem;
-        border-radius: 0.5rem;
-        object-fit: cover;
-        margin-right: 1rem;
-        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .item-details h4 {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-    }
-
-    .item-details p {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0.125rem 0;
-    }
-
-    .order-totals {
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        border-top: 3px solid #059669;
-    }
-
-    .total-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .total-row:last-child {
-        margin-bottom: 0;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .total-label {
-        color: #64748b;
-        font-weight: 500;
-    }
-
-    .total-amount {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .total-row:last-child .total-label,
-    .total-row:last-child .total-amount {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: #059669;
-    }
-
-    /* Notification styles - matching base.html */
-    .notification {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        z-index: 50;
-        width: 18rem;
-        max-width: 100%;
-    }
-
-    .notification-content {
-        background: linear-gradient(to right, #ef4444, #dc2626);
-        color: white;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        transform: translateY(0.5rem);
-        transition: all 0.3s ease-in-out;
-        opacity: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .notification.show .notification-content {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    .notification-message {
-        display: block;
-        font-weight: 500;
-    }
-
-    .notification-close {
-        margin-left: 0.5rem;
-        flex-shrink: 0;
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 0;
-    }
-
-    .notification-close svg {
-        height: 1rem;
-        width: 1rem;
-        fill: currentColor;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 1024px) {
         .checkout-title {
-            font-size: 2.5rem;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .checkout-title::after {
+            content: "";
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 9999px;
+        }
+
+        /* Progress indicator */
+        .progress-container {
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        .progress-wrapper {
+            max-width: 48rem;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+            background-size: 200% 100%;
+            animation: shine 3s linear infinite;
         }
 
         .progress-steps {
-            flex-direction: column;
-            gap: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
         }
 
         .progress-line {
-            display: none;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .checkout-container {
-            padding: 2rem 0;
-        }
-
-        .checkout-title {
-            font-size: 2rem;
+            position: absolute;
+            top: 1.25rem;
+            left: 2.5rem;
+            right: 2.5rem;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            z-index: 1;
         }
 
-        .content-card,
-        .summary-card {
-            border-radius: 1rem;
-            margin: 0 1rem;
+        .progress-line-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 9999px;
+            width: 0%;
+            animation: progressFill 1s ease-out 0.5s forwards;
         }
 
-        .card-content,
-        .summary-content {
-            padding: 1.5rem 1rem;
-        }
-
-        .selection-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .order-item {
+        .progress-step {
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .step-circle.completed {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+        }
+
+        .step-circle.inactive {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 600;
             text-align: center;
         }
 
-        .item-image {
-            margin: 0 auto 0.5rem;
+        .step-label.active {
+            color: #3b82f6;
         }
-    }
-</style>
+
+        .step-label.completed {
+            color: #22c55e;
+        }
+
+        .step-label.inactive {
+            color: #9ca3af;
+        }
+
+        /* Content cards */
+        .content-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .content-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+            background-size: 200% 100%;
+            animation: shine 4s linear infinite;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Section headers */
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header svg {
+            margin-right: 0.75rem;
+            color: #3b82f6;
+        }
+
+        /* Address and method selection */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .selection-item {
+            position: relative;
+        }
+
+        .selection-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .selection-label {
+            display: block;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: white;
+        }
+
+        .selection-label:hover {
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .selection-input:checked + .selection-label {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .address-content h3 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .address-content p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0.125rem 0;
+        }
+
+        .default-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .method-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .method-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .method-price {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        /* Form elements */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-input {
+            width: 1rem;
+            height: 1rem;
+            color: #3b82f6;
+            border-color: #d1d5db;
+            border-radius: 0.25rem;
+            margin-right: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .checkbox-label {
+            color: #374151;
+            font-weight: 500;
+        }
+
+        /* Warning and info sections */
+        .warning-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fbbf24;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .warning-section svg {
+            margin-right: 0.75rem;
+            color: #f59e0b;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .warning-section p {
+            color: #92400e;
+            font-size: 0.875rem;
+        }
+
+        /* Action buttons */
+        .action-link {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .action-link:hover {
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .action-link svg {
+            margin-right: 0.5rem;
+        }
+
+        .primary-btn {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2),
+            0 2px 4px -1px rgba(59, 130, 246, 0.1);
+            margin-top: 2rem;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3),
+            0 4px 6px -2px rgba(59, 130, 246, 0.1);
+        }
+
+        .primary-btn::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 70px;
+            height: 200%;
+            background: linear-gradient(
+                    90deg,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.3) 50%,
+                    rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(25deg);
+            transition: all 0.6s ease;
+        }
+
+        .primary-btn:hover::after {
+            left: 200%;
+        }
+
+        .secondary-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #3b82f6;
+            font-weight: 600;
+            border: 2px solid #3b82f6;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .secondary-btn:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Order summary */
+        .summary-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+
+        .summary-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399, #059669);
+            background-size: 200% 100%;
+            animation: shine 4s linear infinite;
+        }
+
+        .summary-header {
+            padding: 1.5rem 1.5rem 1rem;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+        }
+
+        .summary-title svg {
+            margin-right: 0.5rem;
+            color: #059669;
+        }
+
+        .summary-content {
+            padding: 1.5rem;
+        }
+
+        .order-items {
+            margin-bottom: 1.5rem;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .order-item:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .item-image {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            margin-right: 1rem;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-details h4 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-details p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0.125rem 0;
+        }
+
+        .order-totals {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border-top: 3px solid #059669;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .total-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .total-amount {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .total-row:last-child .total-label,
+        .total-row:last-child .total-amount {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        /* Notification styles - matching base.html */
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 50;
+            width: 18rem;
+            max-width: 100%;
+        }
+
+        .notification-content {
+            background: linear-gradient(to right, #ef4444, #dc2626);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(0.5rem);
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification.show .notification-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification-message {
+            display: block;
+            font-weight: 500;
+        }
+
+        .notification-close {
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .notification-close svg {
+            height: 1rem;
+            width: 1rem;
+            fill: currentColor;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .checkout-title {
+                font-size: 2.5rem;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-line {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .checkout-container {
+                padding: 2rem 0;
+            }
+
+            .checkout-title {
+                font-size: 2rem;
+            }
+
+            .content-card,
+            .summary-card {
+                border-radius: 1rem;
+                margin: 0 1rem;
+            }
+
+            .card-content,
+            .summary-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .selection-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .order-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .item-image {
+                margin: 0 auto 0.5rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="checkout-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="checkout-header">
-            <h1 class="checkout-title">Pago</h1>
-        </div>
+    <div class="checkout-container">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="checkout-header">
+                <h1 class="checkout-title">Pago</h1>
+            </div>
 
-        <!-- Checkout Progress -->
-        <div class="progress-container">
-            <div class="progress-wrapper">
-                <div class="progress-steps">
-                    <div class="progress-line">
-                        <div class="progress-line-fill"></div>
-                    </div>
+            <!-- Checkout Progress -->
+            <div class="progress-container">
+                <div class="progress-wrapper">
+                    <div class="progress-steps">
+                        <div class="progress-line">
+                            <div class="progress-line-fill"></div>
+                        </div>
 
-                    <div class="progress-step">
-                        <div class="step-circle active">1</div>
-                        <div class="step-label active">Envío</div>
-                    </div>
+                        <div class="progress-step">
+                            <div class="step-circle active">1</div>
+                            <div class="step-label active">Envío</div>
+                        </div>
 
-                    <div class="progress-step">
-                        <div class="step-circle inactive">2</div>
-                        <div class="step-label inactive">Forma de Pago</div>
-                    </div>
+                        <div class="progress-step">
+                            <div class="step-circle inactive">2</div>
+                            <div class="step-label inactive">Forma de Pago</div>
+                        </div>
 
-                    <div class="progress-step">
-                        <div class="step-circle inactive">3</div>
-                        <div class="step-label inactive">Confirmación</div>
+                        <div class="progress-step">
+                            <div class="step-circle inactive">3</div>
+                            <div class="step-label inactive">Confirmación</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left column: Shipping & Billing Address -->
-            <div class="lg:col-span-2">
-                <div class="content-card">
-                    <div class="card-content">
-                        <form id="checkout-form" method="post" action="{% url 'checkout_address_save' %}">
-                            {% csrf_token %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left column: Shipping & Billing Address -->
+                <div class="lg:col-span-2">
+                    <div class="content-card">
+                        <div class="card-content">
+                            <form id="checkout-form" method="post" action="{% url 'checkout_address_save' %}">
+                                {% csrf_token %}
 
-                            <!-- Shipping Address Section -->
-                            <div class="mb-8">
-                                <h2 class="section-header">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                    </svg>
-                                    Dirección de Envio
-                                </h2>
-
-                                {% if addresses %}
-                                    <div class="selection-grid">
-                                        {% for address in addresses %}
-                                        <div class="selection-item">
-                                            <input type="radio" id="shipping_{{ address.id }}" name="shipping_address"
-                                                   value="{{ address.id }}"
-                                                   class="selection-input"
-                                                   {% if address.is_default or forloop.first %}checked{% endif %}>
-                                            <label for="shipping_{{ address.id }}" class="selection-label">
-                                                <div class="address-content">
-                                                    <h3>{{ address.street }}</h3>
-                                                    <p>{{ address.city }}, {{ address.province }} {{ address.postal_code }}</p>
-                                                    <p>{{ address.phone }}</p>
-                                                </div>
-                                                {% if address.is_default %}
-                                                <span class="default-badge">Por Defecto</span>
-                                                {% endif %}
-                                            </label>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <a href="{% url 'address_management' %}" class="action-link">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                                            </svg>
-                                            Añadir Nueva Dirección
-                                        </a>
-                                    </div>
-                                {% else %}
-                                    <div class="warning-section">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                <!-- Shipping Address Section -->
+                                <div class="mb-8">
+                                    <h2 class="section-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20"
+                                             fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                                  clip-rule="evenodd"/>
                                         </svg>
-                                        <p>No tiene ninguna dirección guardada. Por favor, añada una dirección de envío para continuar.</p>
-                                    </div>
+                                        Dirección de Envio
+                                    </h2>
 
-                                    <div class="mt-4">
-                                        <a href="{% url 'address_management' %}" class="secondary-btn">
-                                            Añadir Dirección
-                                        </a>
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Billing Address Section -->
-                            <div class="mb-8">
-                                <h2 class="section-header">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
-                                    </svg>
-                                    Dirección de Facturación
-                                </h2>
-
-                                <div class="checkbox-wrapper">
-                                    <input id="same_as_shipping" name="same_as_shipping" type="checkbox" checked class="checkbox-input">
-                                    <label for="same_as_shipping" class="checkbox-label">
-                                        La Misma que el Envío
-                                    </label>
-                                </div>
-
-                                <div id="billing_address_section" class="hidden mt-4">
                                     {% if addresses %}
                                         <div class="selection-grid">
                                             {% for address in addresses %}
-                                            <div class="selection-item">
-                                                <input type="radio" id="billing_{{ address.id }}" name="billing_address"
-                                                       value="{{ address.id }}"
-                                                       class="selection-input"
-                                                       {% if address.is_default or forloop.first %}checked{% endif %}>
-                                                <label for="billing_{{ address.id }}" class="selection-label">
-                                                    <div class="address-content">
-                                                        <h3>{{ address.street }}</h3>
-                                                        <p>{{ address.city }}, {{ address.province }} {{ address.postal_code }}</p>
-                                                        <p>{{ address.phone }}</p>
-                                                    </div>
-                                                </label>
-                                            </div>
+                                                <div class="selection-item">
+                                                    <input type="radio" id="shipping_{{ address.id }}"
+                                                           name="shipping_address"
+                                                           value="{{ address.id }}"
+                                                           class="selection-input"
+                                                           {% if address.is_default or forloop.first %}checked{% endif %}>
+                                                    <label for="shipping_{{ address.id }}" class="selection-label">
+                                                        <div class="address-content">
+                                                            <h3>{{ address.street }}</h3>
+                                                            <p>{{ address.city }}, {{ address.province }} {{ address.postal_code }}</p>
+                                                            <p>{{ address.phone }}</p>
+                                                        </div>
+                                                        {% if address.is_default %}
+                                                            <span class="default-badge">Por Defecto</span>
+                                                        {% endif %}
+                                                    </label>
+                                                </div>
                                             {% endfor %}
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <a href="{% url 'address_management' %}" class="action-link">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                     viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd"
+                                                          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                                          clip-rule="evenodd"/>
+                                                </svg>
+                                                Añadir Nueva Dirección
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        <div class="warning-section">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                                 fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                      clip-rule="evenodd"/>
+                                            </svg>
+                                            <p>No tiene ninguna dirección guardada. Por favor, añada una dirección de
+                                                envío para continuar.</p>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <a href="{% url 'address_management' %}" class="secondary-btn">
+                                                Añadir Dirección
+                                            </a>
                                         </div>
                                     {% endif %}
                                 </div>
-                            </div>
 
-                            <!-- Shipping Method Section -->
-                            <div>
-                                <h2 class="section-header">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                                        <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707L16 7.586A1 1 0 0015.414 7H14z" />
-                                    </svg>
-                                    Método de Envío
-                                </h2>
-
-                                {% if shipping_methods %}
-                                    <div class="space-y-4">
-                                        {% for method in shipping_methods %}
-                                        <div class="selection-item">
-                                            <input type="radio" id="shipping_method_{{ method.id }}" name="shipping_method"
-                                                   value="{{ method.id }}"
-                                                   class="selection-input"
-                                                   {% if forloop.first %}checked{% endif %}>
-                                            <label for="shipping_method_{{ method.id }}" class="selection-label">
-                                                <div class="method-content">
-                                                    <div class="method-name">{{ method.name }}</div>
-                                                    <div class="method-price">${{ method.cost }}</div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <div class="warning-section">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                <!-- Billing Address Section -->
+                                <div class="mb-8">
+                                    <h2 class="section-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20"
+                                             fill="currentColor">
+                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                            <path fill-rule="evenodd"
+                                                  d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                                                  clip-rule="evenodd"/>
                                         </svg>
-                                        <p>No hay métodos de envio disponibles</p>
-                                    </div>
-                                {% endif %}
-                            </div>
+                                        Dirección de Facturación
+                                    </h2>
 
-                            <button type="submit" class="primary-btn">
-                                Continuar al Pago
-                            </button>
-                        </form>
+                                    <div class="checkbox-wrapper">
+                                        <input id="same_as_shipping" name="same_as_shipping" type="checkbox" checked
+                                               class="checkbox-input">
+                                        <label for="same_as_shipping" class="checkbox-label">
+                                            La Misma que el Envío
+                                        </label>
+                                    </div>
+
+                                    <div id="billing_address_section" class="hidden mt-4">
+                                        {% if addresses %}
+                                            <div class="selection-grid">
+                                                {% for address in addresses %}
+                                                    <div class="selection-item">
+                                                        <input type="radio" id="billing_{{ address.id }}"
+                                                               name="billing_address"
+                                                               value="{{ address.id }}"
+                                                               class="selection-input"
+                                                               {% if address.is_default or forloop.first %}checked{% endif %}>
+                                                        <label for="billing_{{ address.id }}" class="selection-label">
+                                                            <div class="address-content">
+                                                                <h3>{{ address.street }}</h3>
+                                                                <p>{{ address.city }}, {{ address.province }} {{ address.postal_code }}</p>
+                                                                <p>{{ address.phone }}</p>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Shipping Method Section -->
+                                <div>
+                                    <h2 class="section-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20"
+                                             fill="currentColor">
+                                            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                                            <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707L16 7.586A1 1 0 0015.414 7H14z"/>
+                                        </svg>
+                                        Método de Envío
+                                    </h2>
+
+                                    {% if shipping_methods %}
+                                        <div class="space-y-4">
+                                            {% for method in shipping_methods %}
+                                                <div class="selection-item">
+                                                    <input type="radio" id="shipping_method_{{ method.id }}"
+                                                           name="shipping_method"
+                                                           value="{{ method.id }}"
+                                                           class="selection-input"
+                                                           {% if forloop.first %}checked{% endif %}>
+                                                    <label for="shipping_method_{{ method.id }}"
+                                                           class="selection-label">
+                                                        <div class="method-content">
+                                                            <div class="method-name">{{ method.name }}</div>
+                                                            <div class="method-price">${{ method.cost }}</div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="warning-section">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                                 fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                      clip-rule="evenodd"/>
+                                            </svg>
+                                            <p>No hay métodos de envio disponibles</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <button type="submit" class="primary-btn">
+                                    Continuar al Pago
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right column: Order Summary -->
-            <div class="lg:col-span-1">
-                <div class="summary-card">
-                    <div class="summary-header">
-                        <h2 class="summary-title">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                            </svg>
-                            Resumen de Compra
-                        </h2>
-                    </div>
+                <!-- Right column: Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <h2 class="summary-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                     fill="currentColor">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                                </svg>
+                                Resumen de Compra
+                            </h2>
+                        </div>
 
-                    <div class="summary-content">
-                        <div class="order-items">
-                            {% for item in cart %}
-                            <div class="order-item">
-                                {% if item.image_url %}
-                                    <img class="item-image" src="{{ item.image_url }}" alt="{{ item.product.name }}">
-                                {% else %}
-                                    <img class="item-image" src="https://via.placeholder.com/150" alt="{{ item.product.name }}">
-                                {% endif %}
-                                <div class="item-details">
-                                    <h4>{{ item.product.name }}</h4>
-                                    <p>Qty: {{ item.quantity }}</p>
-                                    <p>${{ item.total_price }}</p>
+                        <div class="summary-content">
+                            <div class="order-items">
+                                {% for item in cart %}
+                                    <div class="order-item">
+                                        {% if item.product.primary_image %}
+                                            <img class="item-image"
+                                                 src="{% url 'product_image' item.product.primary_image.id %}"
+                                                 alt="{{ item.product.name }}">
+                                        {% else %}
+                                            <img class="item-image" src="https://via.placeholder.com/150"
+                                                 alt="{{ item.product.name }}">
+                                        {% endif %}
+                                        <div class="item-details">
+                                            <h4>{{ item.product.name }}</h4>
+                                            <p>Qty: {{ item.quantity }}</p>
+                                            <p>${{ item.total_price }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="order-totals">
+                                <div class="total-row">
+                                    <div class="total-label">Subtotal</div>
+                                    <div class="total-amount">${{ cart.get_total_price }}</div>
+                                </div>
+                                <div class="total-row">
+                                    <div class="total-label">Envio</div>
+                                    <div id="summary-shipping-cost" class="total-amount">$0.00</div>
+                                </div>
+                                <div class="total-row">
+                                    <div class="total-label">Total</div>
+                                    <div id="summary-total" class="total-amount">${{ cart.get_total_price }}</div>
                                 </div>
                             </div>
-                            {% endfor %}
-                        </div>
 
-                        <div class="order-totals">
-                            <div class="total-row">
-                                <div class="total-label">Subtotal</div>
-                                <div class="total-amount">${{ cart.get_total_price }}</div>
+                            <div class="mt-6">
+                                <a href="{% url 'cart_detail' %}" class="action-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                         fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                              clip-rule="evenodd"/>
+                                    </svg>
+                                    Volver al Carro
+                                </a>
                             </div>
-                            <div class="total-row">
-                                <div class="total-label">Envio</div>
-                                <div id="summary-shipping-cost" class="total-amount">$0.00</div>
-                            </div>
-                            <div class="total-row">
-                                <div class="total-label">Total</div>
-                                <div id="summary-total" class="total-amount">${{ cart.get_total_price }}</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6">
-                            <a href="{% url 'cart_detail' %}" class="action-link">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                volver al Carro
-                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Notification -->
-<div id="notification" class="notification">
-    <div class="notification-content">
-        <span id="notification-message" class="notification-message">Please select a shipping address</span>
-        <button type="button" class="notification-close" onclick="dismissNotification()">
-            <svg fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-            </svg>
-        </button>
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <span id="notification-message" class="notification-message">Please select a shipping address</span>
+            <button type="button" class="notification-close" onclick="dismissNotification()">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-    $(document).ready(function() {
-        // Handle "Same as shipping" checkbox
-        $('#same_as_shipping').change(function() {
-            if ($(this).is(':checked')) {
-                $('#billing_address_section').addClass('hidden');
-                $('input[name="billing_address"]').prop('disabled', true);
-            } else {
-                $('#billing_address_section').removeClass('hidden');
-                $('input[name="billing_address"]').prop('disabled', false);
-            }
-        });
-
-        // Initially disable billing address if "Same as shipping" is checked
-        if ($('#same_as_shipping').is(':checked')) {
-            $('input[name="billing_address"]').prop('disabled', true);
-        }
-
-        // Update shipping cost and total in summary when shipping method changes
-        $('input[name="shipping_method"]').change(function() {
-            const selectedMethod = $('input[name="shipping_method"]:checked');
-            const shippingCost = parseFloat(selectedMethod.closest('label').find('.method-price').text().replace('$', ''));
-            const subtotal = parseFloat('{{ cart.get_total_price }}');
-            const total = subtotal + shippingCost;
-
-            $('#summary-shipping-cost').text('$' + shippingCost.toFixed(2));
-            $('#summary-total').text('$' + total.toFixed(2));
-        });
-
-        // Trigger change on page load to set initial values
-        $('input[name="shipping_method"]:checked').trigger('change');
-
-        // Form submission handler
-        $('#checkout-form').submit(function(e) {
-            e.preventDefault();
-
-            // Validate form
-            const shippingAddress = $('input[name="shipping_address"]:checked').val();
-            if (!shippingAddress) {
-                showNotification('Please select a shipping address');
-                return false;
-            }
-
-            const shippingMethod = $('input[name="shipping_method"]:checked').val();
-            if (!shippingMethod) {
-                showNotification('Please select a shipping method');
-                return false;
-            }
-
-            // Prepare form data
-            const formData = {
-                shipping_address: shippingAddress,
-                shipping_method: shippingMethod
-            };
-
-            // Add billing address if not same as shipping
-            if (!$('#same_as_shipping').is(':checked')) {
-                const billingAddress = $('input[name="billing_address"]:checked').val();
-                if (!billingAddress) {
-                    showNotification('Please select a billing address');
-                    return false;
-                }
-                formData.billing_address = billingAddress;
-            }
-
-            // Send AJAX request
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-CSRFToken', $('input[name="csrfmiddlewaretoken"]').val());
-                },
-                success: function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirect_url;
-                    } else {
-                        showNotification(response.message || 'Ha ocurrido un Error');
-                    }
-                },
-                error: function() {
-                    showNotification('Ha ocurrido un error. Por favor inténtelo de nuevo.');
+    <script>
+        $(document).ready(function () {
+            // Handle "Same as shipping" checkbox
+            $('#same_as_shipping').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#billing_address_section').addClass('hidden');
+                    $('input[name="billing_address"]').prop('disabled', true);
+                } else {
+                    $('#billing_address_section').removeClass('hidden');
+                    $('input[name="billing_address"]').prop('disabled', false);
                 }
             });
 
-            return false;
+            // Initially disable billing address if "Same as shipping" is checked
+            if ($('#same_as_shipping').is(':checked')) {
+                $('input[name="billing_address"]').prop('disabled', true);
+            }
+
+            // Update shipping cost and total in summary when shipping method changes
+            $('input[name="shipping_method"]').change(function () {
+                const selectedMethod = $('input[name="shipping_method"]:checked');
+                const shippingCost = parseFloat(selectedMethod.closest('label').find('.method-price').text().replace('$', ''));
+                const subtotal = parseFloat('{{ cart.get_total_price }}');
+                const total = subtotal + shippingCost;
+
+                $('#summary-shipping-cost').text('$' + shippingCost.toFixed(2));
+                $('#summary-total').text('$' + total.toFixed(2));
+            });
+
+            // Trigger change on page load to set initial values
+            $('input[name="shipping_method"]:checked').trigger('change');
+
+            // Form submission handler
+            $('#checkout-form').submit(function (e) {
+                e.preventDefault();
+
+                // Validate form
+                const shippingAddress = $('input[name="shipping_address"]:checked').val();
+                if (!shippingAddress) {
+                    showNotification('Please select a shipping address');
+                    return false;
+                }
+
+                const shippingMethod = $('input[name="shipping_method"]:checked').val();
+                if (!shippingMethod) {
+                    showNotification('Please select a shipping method');
+                    return false;
+                }
+
+                // Prepare form data
+                const formData = {
+                    shipping_address: shippingAddress,
+                    shipping_method: shippingMethod
+                };
+
+                // Add billing address if not same as shipping
+                if (!$('#same_as_shipping').is(':checked')) {
+                    const billingAddress = $('input[name="billing_address"]:checked').val();
+                    if (!billingAddress) {
+                        showNotification('Please select a billing address');
+                        return false;
+                    }
+                    formData.billing_address = billingAddress;
+                }
+
+                // Send AJAX request
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', $('input[name="csrfmiddlewaretoken"]').val());
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            window.location.href = response.redirect_url;
+                        } else {
+                            showNotification(response.message || 'Ha ocurrido un Error');
+                        }
+                    },
+                    error: function () {
+                        showNotification('Ha ocurrido un error. Por favor inténtelo de nuevo.');
+                    }
+                });
+
+                return false;
+            });
         });
-    });
 
-    // Function to show notification - matching base.html style
-    function showNotification(message) {
-        const $notification = $('#notification');
-        const $notificationMessage = $('#notification-message');
+        // Function to show notification - matching base.html style
+        function showNotification(message) {
+            const $notification = $('#notification');
+            const $notificationMessage = $('#notification-message');
 
-        // Set message text
-        $notificationMessage.text(message);
+            // Set message text
+            $notificationMessage.text(message);
 
-        // Show notification with animation
-        $notification.addClass('show');
+            // Show notification with animation
+            $notification.addClass('show');
 
-        // Auto-dismiss after 5 seconds (matching base.html timing)
-        setTimeout(function() {
-            dismissNotification();
-        }, 5000);
-    }
+            // Auto-dismiss after 5 seconds (matching base.html timing)
+            setTimeout(function () {
+                dismissNotification();
+            }, 5000);
+        }
 
-    // Function to dismiss notification - matching base.html behavior
-    function dismissNotification() {
-        const $notification = $('#notification');
-        $notification.removeClass('show');
-    }
-</script>
+        // Function to dismiss notification - matching base.html behavior
+        function dismissNotification() {
+            const $notification = $('#notification');
+            $notification.removeClass('show');
+        }
+    </script>
 {% endblock %}

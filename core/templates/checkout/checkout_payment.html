@@ -1,1272 +1,1337 @@
 {% extends "base.html" %}
 
-{% block title %}Checkout - Payment - {{ block.super }}{% endblock %}
+{% block title %}Pago - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Animation keyframes */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    <style>
+        /* Animation keyframes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        @keyframes shine {
+            0% {
+                background-position: -100% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes progressFill {
+            from {
+                width: 0%;
+            }
+            to {
+                width: 66.66%;
+            }
+        }
+
+        /* Page container styles */
+        .checkout-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            min-height: calc(100vh - 4rem);
+            padding: 3rem 0;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* Header styles */
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideIn 0.8s ease-out;
+        }
 
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-    }
-
-    @keyframes shine {
-        0% { background-position: -100% 0; }
-        100% { background-position: 200% 0; }
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    @keyframes progressFill {
-        from { width: 0%; }
-        to { width: 66.66%; }
-    }
-
-    /* Page container styles */
-    .checkout-container {
-        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
-        min-height: calc(100vh - 4rem);
-        padding: 3rem 0;
-        animation: fadeIn 0.8s ease-out;
-    }
-
-    /* Header styles */
-    .checkout-header {
-        text-align: center;
-        margin-bottom: 3rem;
-        animation: slideIn 0.8s ease-out;
-    }
-
-    .checkout-title {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 1rem;
-        position: relative;
-    }
-
-    .checkout-title::after {
-        content: "";
-        position: absolute;
-        bottom: -0.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        border-radius: 9999px;
-    }
-
-    /* Progress indicator */
-    .progress-container {
-        margin-bottom: 3rem;
-        animation: fadeIn 1s ease-out 0.3s both;
-    }
-
-    .progress-wrapper {
-        max-width: 48rem;
-        margin: 0 auto;
-        background: white;
-        border-radius: 1.5rem;
-        padding: 2rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .progress-wrapper::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
-        background-size: 200% 100%;
-        animation: shine 3s linear infinite;
-    }
-
-    .progress-steps {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-    }
-
-    .progress-line {
-        position: absolute;
-        top: 1.25rem;
-        left: 2.5rem;
-        right: 2.5rem;
-        height: 3px;
-        background: #e5e7eb;
-        border-radius: 9999px;
-        z-index: 1;
-    }
-
-    .progress-line-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
-        border-radius: 9999px;
-        width: 66.66%;
-        animation: progressFill 1s ease-out 0.5s forwards;
-    }
-
-    .progress-step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-    }
-
-    .step-circle {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .step-circle.active {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-        animation: pulse 2s infinite;
-    }
-
-    .step-circle.completed {
-        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-        color: white;
-        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
-    }
-
-    .step-circle.inactive {
-        background: #f3f4f6;
-        color: #9ca3af;
-    }
-
-    .step-label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-align: center;
-    }
-
-    .step-label.active {
-        color: #3b82f6;
-    }
-
-    .step-label.completed {
-        color: #22c55e;
-    }
-
-    .step-label.inactive {
-        color: #9ca3af;
-    }
-
-    /* Content cards */
-    .content-card {
-        background: white;
-        border-radius: 1.5rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        overflow: hidden;
-        position: relative;
-        animation: fadeIn 1s ease-out 0.6s both;
-    }
-
-    .content-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
-        background-size: 200% 100%;
-        animation: shine 4s linear infinite;
-    }
-
-    .card-content {
-        padding: 2rem;
-    }
-
-    /* Section headers */
-    .section-header {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-    }
-
-    .section-header svg {
-        margin-right: 0.75rem;
-        color: #3b82f6;
-    }
-
-    /* Shipping info summary */
-    .shipping-summary {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid #e2e8f0;
-    }
-
-    .shipping-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .shipping-info h3 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #64748b;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .shipping-info p {
-        color: #1e293b;
-        font-weight: 500;
-        margin: 0.25rem 0;
-    }
-
-    .edit-link {
-        display: inline-flex;
-        align-items: center;
-        color: #3b82f6;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        margin-top: 0.5rem;
-    }
-
-    .edit-link:hover {
-        color: #2563eb;
-        transform: translateY(-1px);
-    }
-
-    /* Payment method selection */
-    .payment-methods {
-        margin-bottom: 2rem;
-    }
-
-    .payment-item {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-
-    .payment-input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .payment-label {
-        display: block;
-        padding: 1.5rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        background: white;
-    }
-
-    .payment-label:hover {
-        border-color: #93c5fd;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-
-    .payment-input:checked + .payment-label {
-        border-color: #3b82f6;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .payment-method-content {
-        display: flex;
-        align-items: center;
-    }
-
-    .payment-icon {
-        margin-right: 1rem;
-        color: #3b82f6;
-    }
-
-    .payment-details h3 {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-    }
-
-    .payment-details p {
-        color: #64748b;
-        font-size: 0.875rem;
-    }
-
-    .default-badge {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    /* Form elements */
-    .checkbox-wrapper {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        border: 1px solid #e2e8f0;
-    }
-
-    .checkbox-input {
-        width: 1rem;
-        height: 1rem;
-        color: #3b82f6;
-        border-color: #d1d5db;
-        border-radius: 0.25rem;
-        margin-right: 0.75rem;
-        transition: all 0.3s ease;
-    }
-
-    .checkbox-input:focus {
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .checkbox-label {
-        color: #374151;
-        font-weight: 500;
-    }
-
-    /* Stripe Elements */
-    .stripe-element-container {
-        margin-bottom: 1.5rem;
-    }
-
-    .stripe-label {
-        display: block;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-    }
-
-    .stripe-element {
-        padding: 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
-        background: white;
-        transition: all 0.3s ease;
-    }
-
-    .stripe-element:focus-within {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .stripe-error {
-        color: #ef4444;
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        background-color: white;
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-
-    .sepa-disclaimer {
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        color: #64748b;
-        line-height: 1.4;
-    }
-
-    /* Action buttons */
-    .primary-btn {
-        width: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem 1.5rem;
-        background: linear-gradient(90deg, #3b82f6, #2563eb);
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 0.75rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-        box-shadow:
-            0 4px 6px -1px rgba(59, 130, 246, 0.2),
-            0 2px 4px -1px rgba(59, 130, 246, 0.1);
-        margin-top: 2rem;
-    }
-
-    .primary-btn:hover {
-        transform: translateY(-2px);
-        box-shadow:
-            0 10px 15px -3px rgba(59, 130, 246, 0.3),
-            0 4px 6px -2px rgba(59, 130, 246, 0.1);
-    }
-
-    .primary-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .primary-btn::after {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -100%;
-        width: 70px;
-        height: 200%;
-        background: linear-gradient(
-            90deg,
-            rgba(255,255,255,0) 0%,
-            rgba(255,255,255,0.3) 50%,
-            rgba(255,255,255,0) 100%
-        );
-        transform: rotate(25deg);
-        transition: all 0.6s ease;
-    }
-
-    .primary-btn:hover::after {
-        left: 200%;
-    }
-
-    /* Loading overlay */
-    .loading-overlay {
-        position: fixed;
-        inset: 0;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 60;
-    }
-
-    .loading-content {
-        background: white;
-        padding: 2rem 3rem;
-        border-radius: 1rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .loading-spinner {
-        width: 2rem;
-        height: 2rem;
-        border: 3px solid #e5e7eb;
-        border-top: 3px solid #3b82f6;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    /* Order summary */
-    .summary-card {
-        background: white;
-        border-radius: 1.5rem;
-        box-shadow:
-            0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        overflow: hidden;
-        position: relative;
-        animation: fadeIn 1s ease-out 0.8s both;
-    }
-
-    .summary-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #059669, #10b981, #34d399, #059669);
-        background-size: 200% 100%;
-        animation: shine 4s linear infinite;
-    }
-
-    .summary-header {
-        padding: 1.5rem 1.5rem 1rem;
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .summary-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1e293b;
-        display: flex;
-        align-items: center;
-    }
-
-    .summary-title svg {
-        margin-right: 0.5rem;
-        color: #059669;
-    }
-
-    .summary-content {
-        padding: 1.5rem;
-    }
-
-    .order-items {
-        margin-bottom: 1.5rem;
-    }
-
-    .order-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        transition: all 0.3s ease;
-    }
-
-    .order-item:hover {
-        background: #f1f5f9;
-        transform: translateY(-1px);
-    }
-
-    .item-image {
-        width: 4rem;
-        height: 4rem;
-        border-radius: 0.5rem;
-        object-fit: cover;
-        margin-right: 1rem;
-        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .item-details h4 {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
-    }
-
-    .item-details p {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0.125rem 0;
-    }
-
-    .order-totals {
-        background: #f8fafc;
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        border-top: 3px solid #059669;
-    }
-
-    .total-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .total-row:last-child {
-        margin-bottom: 0;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .total-label {
-        color: #64748b;
-        font-weight: 500;
-    }
-
-    .total-amount {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .total-row:last-child .total-label,
-    .total-row:last-child .total-amount {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: #059669;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        color: #3b82f6;
-        font-weight: 600;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        margin-top: 1.5rem;
-    }
-
-    .back-link:hover {
-        color: #2563eb;
-        transform: translateY(-1px);
-    }
-
-    .back-link svg {
-        margin-right: 0.5rem;
-    }
-
-    /* Notification styles - matching base.html */
-    .notification {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        z-index: 50;
-        width: 18rem;
-        max-width: 100%;
-    }
-
-    .notification-content {
-        background: linear-gradient(to right, #ef4444, #dc2626);
-        color: white;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        transform: translateY(0.5rem);
-        transition: all 0.3s ease-in-out;
-        opacity: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .notification.show .notification-content {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    .notification-message {
-        display: block;
-        font-weight: 500;
-    }
-
-    .notification-close {
-        margin-left: 0.5rem;
-        flex-shrink: 0;
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 0;
-    }
-
-    .notification-close svg {
-        height: 1rem;
-        width: 1rem;
-        fill: currentColor;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 1024px) {
         .checkout-title {
-            font-size: 2.5rem;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .checkout-title::after {
+            content: "";
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 9999px;
+        }
+
+        /* Progress indicator */
+        .progress-container {
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        .progress-wrapper {
+            max-width: 48rem;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+            background-size: 200% 100%;
+            animation: shine 3s linear infinite;
         }
 
         .progress-steps {
-            flex-direction: column;
-            gap: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
         }
 
         .progress-line {
-            display: none;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .checkout-container {
-            padding: 2rem 0;
-        }
-
-        .checkout-title {
-            font-size: 2rem;
+            position: absolute;
+            top: 1.25rem;
+            left: 2.5rem;
+            right: 2.5rem;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            z-index: 1;
         }
 
-        .content-card,
-        .summary-card {
-            border-radius: 1rem;
-            margin: 0 1rem;
+        .progress-line-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 9999px;
+            width: 66.66%;
+            animation: progressFill 1s ease-out 0.5s forwards;
         }
 
-        .card-content,
-        .summary-content {
-            padding: 1.5rem 1rem;
-        }
-
-        .shipping-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .order-item {
+        .progress-step {
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .step-circle.completed {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+        }
+
+        .step-circle.inactive {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            font-weight: 600;
             text-align: center;
         }
 
-        .item-image {
-            margin: 0 auto 0.5rem;
+        .step-label.active {
+            color: #3b82f6;
         }
-    }
-</style>
+
+        .step-label.completed {
+            color: #22c55e;
+        }
+
+        .step-label.inactive {
+            color: #9ca3af;
+        }
+
+        /* Content cards */
+        .content-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .content-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
+            background-size: 200% 100%;
+            animation: shine 4s linear infinite;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Section headers */
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header svg {
+            margin-right: 0.75rem;
+            color: #3b82f6;
+        }
+
+        /* Shipping info summary */
+        .shipping-summary {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .shipping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .shipping-info h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .shipping-info p {
+            color: #1e293b;
+            font-weight: 500;
+            margin: 0.25rem 0;
+        }
+
+        .edit-link {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin-top: 0.5rem;
+        }
+
+        .edit-link:hover {
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        /* Payment method selection */
+        .payment-methods {
+            margin-bottom: 2rem;
+        }
+
+        .payment-item {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .payment-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .payment-label {
+            display: block;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: white;
+        }
+
+        .payment-label:hover {
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-input:checked + .payment-label {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .payment-method-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .payment-icon {
+            margin-right: 1rem;
+            color: #3b82f6;
+        }
+
+        .payment-details h3 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-details p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .default-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Form elements */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-input {
+            width: 1rem;
+            height: 1rem;
+            color: #3b82f6;
+            border-color: #d1d5db;
+            border-radius: 0.25rem;
+            margin-right: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .checkbox-label {
+            color: #374151;
+            font-weight: 500;
+        }
+
+        /* Stripe Elements */
+        .stripe-element-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .stripe-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .stripe-element {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .stripe-element:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .stripe-error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .sepa-disclaimer {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Action buttons */
+        .primary-btn {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2),
+            0 2px 4px -1px rgba(59, 130, 246, 0.1);
+            margin-top: 2rem;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3),
+            0 4px 6px -2px rgba(59, 130, 246, 0.1);
+        }
+
+        .primary-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .primary-btn::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 70px;
+            height: 200%;
+            background: linear-gradient(
+                    90deg,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.3) 50%,
+                    rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(25deg);
+            transition: all 0.6s ease;
+        }
+
+        .primary-btn:hover::after {
+            left: 200%;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Order summary */
+        .summary-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+
+        .summary-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399, #059669);
+            background-size: 200% 100%;
+            animation: shine 4s linear infinite;
+        }
+
+        .summary-header {
+            padding: 1.5rem 1.5rem 1rem;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+        }
+
+        .summary-title svg {
+            margin-right: 0.5rem;
+            color: #059669;
+        }
+
+        .summary-content {
+            padding: 1.5rem;
+        }
+
+        .order-items {
+            margin-bottom: 1.5rem;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .order-item:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .item-image {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            margin-right: 1rem;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-details h4 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-details p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0.125rem 0;
+        }
+
+        .order-totals {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border-top: 3px solid #059669;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .total-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .total-amount {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .total-row:last-child .total-label,
+        .total-row:last-child .total-amount {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin-top: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .back-link svg {
+            margin-right: 0.5rem;
+        }
+
+        /* Notification styles - matching base.html */
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 50;
+            width: 18rem;
+            max-width: 100%;
+        }
+
+        .notification-content {
+            background: linear-gradient(to right, #ef4444, #dc2626);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(0.5rem);
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification.show .notification-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification-message {
+            display: block;
+            font-weight: 500;
+        }
+
+        .notification-close {
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .notification-close svg {
+            height: 1rem;
+            width: 1rem;
+            fill: currentColor;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .checkout-title {
+                font-size: 2.5rem;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-line {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .checkout-container {
+                padding: 2rem 0;
+            }
+
+            .checkout-title {
+                font-size: 2rem;
+            }
+
+            .content-card,
+            .summary-card {
+                border-radius: 1rem;
+                margin: 0 1rem;
+            }
+
+            .card-content,
+            .summary-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .shipping-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .order-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .item-image {
+                margin: 0 auto 0.5rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="checkout-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="checkout-header">
-            <h1 class="checkout-title">Pago</h1>
-        </div>
+    <div class="checkout-container">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="checkout-header">
+                <h1 class="checkout-title">Pago</h1>
+            </div>
 
-        <!-- Checkout Progress -->
-        <div class="progress-container">
-            <div class="progress-wrapper">
-                <div class="progress-steps">
-                    <div class="progress-line">
-                        <div class="progress-line-fill"></div>
-                    </div>
-
-                    <div class="progress-step">
-                        <div class="step-circle completed">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
+            <!-- Checkout Progress -->
+            <div class="progress-container">
+                <div class="progress-wrapper">
+                    <div class="progress-steps">
+                        <div class="progress-line">
+                            <div class="progress-line-fill"></div>
                         </div>
-                        <div class="step-label completed">Envío</div>
-                    </div>
 
-                    <div class="progress-step">
-                        <div class="step-circle active">2</div>
-                        <div class="step-label active">Pago</div>
-                    </div>
+                        <div class="progress-step">
+                            <div class="step-circle completed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                     fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="step-label completed">Envío</div>
+                        </div>
 
-                    <div class="progress-step">
-                        <div class="step-circle inactive">3</div>
-                        <div class="step-label inactive">Confirmación</div>
+                        <div class="progress-step">
+                            <div class="step-circle active">2</div>
+                            <div class="step-label active">Pago</div>
+                        </div>
+
+                        <div class="progress-step">
+                            <div class="step-circle inactive">3</div>
+                            <div class="step-label inactive">Confirmación</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left column: Payment Method -->
-            <div class="lg:col-span-2">
-                <div class="content-card">
-                    <div class="card-content">
-                        <form id="payment-form">
-                            {% csrf_token %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left column: Payment Method -->
+                <div class="lg:col-span-2">
+                    <div class="content-card">
+                        <div class="card-content">
+                            <form id="payment-form">
+                                {% csrf_token %}
 
-                            <!-- Selected Address Summary -->
-                            <div class="mb-6">
-                                <h2 class="section-header">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                    </svg>
-                                    Información del Envío
-                                </h2>
-                                <div class="shipping-summary">
-                                    <div class="shipping-grid">
-                                        <div class="shipping-info">
-                                            <h3>Shipping Address</h3>
-                                            <p>{{ shipping_address.street }}</p>
-                                            <p>{{ shipping_address.city }}, {{ shipping_address.province }} {{ shipping_address.postal_code }}</p>
-                                            <p>{{ shipping_address.phone }}</p>
+                                <!-- Selected Address Summary -->
+                                <div class="mb-6">
+                                    <h2 class="section-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20"
+                                             fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+                                        Información del Envío
+                                    </h2>
+                                    <div class="shipping-summary">
+                                        <div class="shipping-grid">
+                                            <div class="shipping-info">
+                                                <h3>Shipping Address</h3>
+                                                <p>{{ shipping_address.street }}</p>
+                                                <p>{{ shipping_address.city }}, {{ shipping_address.province }} {{ shipping_address.postal_code }}</p>
+                                                <p>{{ shipping_address.phone }}</p>
+                                            </div>
+                                            <div class="shipping-info">
+                                                <h3>Shipping Method</h3>
+                                                <p>{{ shipping_method.name }}</p>
+                                                <p>${{ shipping_method.cost }}</p>
+                                            </div>
                                         </div>
-                                        <div class="shipping-info">
-                                            <h3>Shipping Method</h3>
-                                            <p>{{ shipping_method.name }}</p>
-                                            <p>${{ shipping_method.cost }}</p>
-                                        </div>
+                                        <a href="{% url 'checkout' %}" class="edit-link">Edit</a>
                                     </div>
-                                    <a href="{% url 'checkout' %}" class="edit-link">Edit</a>
                                 </div>
-                            </div>
 
-                            <!-- Payment Methods Section -->
-                            <div class="mb-8">
-                                <h2 class="section-header">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
-                                    </svg>
-                                    Método de Pago
-                                </h2>
+                                <!-- Payment Methods Section -->
+                                <div class="mb-8">
+                                    <h2 class="section-header">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20"
+                                             fill="currentColor">
+                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                            <path fill-rule="evenodd"
+                                                  d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+                                        Método de Pago
+                                    </h2>
 
-                                {% if payment_methods %}
-                                    <div class="payment-methods">
-                                        {% for payment in payment_methods %}
-                                        <div class="payment-item">
-                                            <input type="radio" id="payment_{{ payment.id }}" name="payment_method"
-                                                   value="{{ payment.payment_method_id }}"
-                                                   class="payment-input"
-                                                   {% if payment.is_default or forloop.first %}checked{% endif %}>
-                                            <label for="payment_{{ payment.id }}" class="payment-label">
-                                                <div class="payment-method-content">
-                                                    {% if payment.payment_type == 'card' %}
-                                                    <svg class="payment-icon h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                                                    </svg>
-                                                    {% elif payment.payment_type == 'sepa_debit' %}
-                                                    <svg class="payment-icon h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
-                                                    </svg>
-                                                    {% else %}
-                                                    <svg class="payment-icon h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                    {% endif %}
-                                                    <div class="payment-details">
-                                                        <h3>{{ payment.display_name }}</h3>
-                                                        {% if payment.expiry_month and payment.expiry_year %}
-                                                        <p>Expires: {{ payment.expiry_month }}/{{ payment.expiry_year }}</p>
+                                    {% if payment_methods %}
+                                        <div class="payment-methods">
+                                            {% for payment in payment_methods %}
+                                                <div class="payment-item">
+                                                    <input type="radio" id="payment_{{ payment.id }}"
+                                                           name="payment_method"
+                                                           value="{{ payment.payment_method_id }}"
+                                                           class="payment-input"
+                                                           {% if payment.is_default or forloop.first %}checked{% endif %}>
+                                                    <label for="payment_{{ payment.id }}" class="payment-label">
+                                                        <div class="payment-method-content">
+                                                            {% if payment.payment_type == 'card' %}
+                                                                <svg class="payment-icon h-8 w-8" fill="none"
+                                                                     stroke="currentColor" viewBox="0 0 24 24"
+                                                                     xmlns="http://www.w3.org/2000/svg">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                          stroke-width="2"
+                                                                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                                                </svg>
+                                                            {% elif payment.payment_type == 'sepa_debit' %}
+                                                                <svg class="payment-icon h-8 w-8" fill="none"
+                                                                     stroke="currentColor" viewBox="0 0 24 24"
+                                                                     xmlns="http://www.w3.org/2000/svg">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                          stroke-width="2"
+                                                                          d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                                                                </svg>
+                                                            {% else %}
+                                                                <svg class="payment-icon h-8 w-8" fill="none"
+                                                                     stroke="currentColor" viewBox="0 0 24 24"
+                                                                     xmlns="http://www.w3.org/2000/svg">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                          stroke-width="2"
+                                                                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                                                                </svg>
+                                                            {% endif %}
+                                                            <div class="payment-details">
+                                                                <h3>{{ payment.display_name }}</h3>
+                                                                {% if payment.expiry_month and payment.expiry_year %}
+                                                                    <p>
+                                                                        Expires: {{ payment.expiry_month }}/{{ payment.expiry_year }}</p>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        {% if payment.is_default %}
+                                                            <span class="default-badge">Por Defecto</span>
                                                         {% endif %}
-                                                    </div>
+                                                    </label>
                                                 </div>
-                                                {% if payment.is_default %}
-                                                <span class="default-badge">Por Defecto</span>
-                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="checkbox-wrapper">
+                                            <input id="add_new_payment" name="add_new_payment" type="checkbox"
+                                                   class="checkbox-input">
+                                            <label for="add_new_payment" class="checkbox-label">
+                                                Añadir Nuevo Método de Pago
                                             </label>
                                         </div>
-                                        {% endfor %}
-                                    </div>
+                                    {% endif %}
 
-                                    <div class="checkbox-wrapper">
-                                        <input id="add_new_payment" name="add_new_payment" type="checkbox" class="checkbox-input">
-                                        <label for="add_new_payment" class="checkbox-label">
-                                            Añadir Nuevo Método de Pago
-                                        </label>
-                                    </div>
-                                {% endif %}
-
-                                <!-- New Payment Method Section -->
-                                <div id="new_payment_section" class="{% if payment_methods %}hidden{% endif %}">
-                                    <div id="card-element-container" class="stripe-element-container">
-                                        <label class="stripe-label">Tarjeta de Débito o Crédito</label>
-                                        <div id="card-element" class="stripe-element">
-                                            <!-- Stripe Card Element will be inserted here -->
-                                        </div>
-                                        <div id="card-errors" class="stripe-error" role="alert"></div>
-                                    </div>
-
-                                    <div class="checkbox-wrapper">
-                                        <input id="use_bank_account" name="use_bank_account" type="checkbox" class="checkbox-input">
-                                        <label for="use_bank_account" class="checkbox-label">
-                                            Pagar con Cuenta Bancaria
-                                        </label>
-                                    </div>
-
-                                    <!-- SEPA Elements Container -->
-                                    <div id="sepa-element-container" class="hidden">
-                                        <div class="stripe-element-container">
-                                            <label class="stripe-label">Nombre de la Cuenta</label>
-                                            <input type="text" id="account_holder_name" class="form-input" placeholder="Enter account holder name">
-                                        </div>
-
-                                        <div class="stripe-element-container">
-                                            <label class="stripe-label">IBAN</label>
-                                            <div id="iban-element" class="stripe-element">
-                                                <!-- Stripe IBAN Element will be inserted here -->
+                                    <!-- New Payment Method Section -->
+                                    <div id="new_payment_section" class="{% if payment_methods %}hidden{% endif %}">
+                                        <div id="card-element-container" class="stripe-element-container">
+                                            <label class="stripe-label">Tarjeta de Débito o Crédito</label>
+                                            <div id="card-element" class="stripe-element">
+                                                <!-- Stripe Card Element will be inserted here -->
                                             </div>
-                                            <div id="iban-errors" class="stripe-error" role="alert"></div>
-                                            <div class="sepa-disclaimer">
-                                                Al facilitar su IBAN y confirmar este pago, autoriza a nuestra empresa y a Stripe, nuestro proveedor de servicios de pago, a enviar instrucciones a su banco para que cargue el importe en su cuenta. Tiene derecho a un reembolso de su banco según los términos y condiciones de su acuerdo con su banco. El reembolso debe reclamarse en un plazo de 8 semanas a partir de la fecha en que se realizó el cargo en su cuenta.                                            </div>
+                                            <div id="card-errors" class="stripe-error" role="alert"></div>
                                         </div>
-                                    </div>
 
-                                    <div class="checkbox-wrapper">
-                                        <input id="save_payment_method" name="save_payment_method" type="checkbox" checked class="checkbox-input">
-                                        <label for="save_payment_method" class="checkbox-label">
-                                            Guardar este Método de Pago para Futuras Compras.
-                                        </label>
+                                        <div class="checkbox-wrapper">
+                                            <input id="use_bank_account" name="use_bank_account" type="checkbox"
+                                                   class="checkbox-input">
+                                            <label for="use_bank_account" class="checkbox-label">
+                                                Pagar con Cuenta Bancaria
+                                            </label>
+                                        </div>
+
+                                        <!-- SEPA Elements Container -->
+                                        <div id="sepa-element-container" class="hidden">
+                                            <div class="stripe-element-container">
+                                                <label class="stripe-label">Nombre de la Cuenta</label>
+                                                <input type="text" id="account_holder_name" class="form-input"
+                                                       placeholder="Enter account holder name">
+                                            </div>
+
+                                            <div class="stripe-element-container">
+                                                <label class="stripe-label">IBAN</label>
+                                                <div id="iban-element" class="stripe-element">
+                                                    <!-- Stripe IBAN Element will be inserted here -->
+                                                </div>
+                                                <div id="iban-errors" class="stripe-error" role="alert"></div>
+                                                <div class="sepa-disclaimer">
+                                                    Al facilitar su IBAN y confirmar este pago, autoriza a nuestra
+                                                    empresa y a Stripe, nuestro proveedor de servicios de pago, a enviar
+                                                    instrucciones a su banco para que cargue el importe en su cuenta.
+                                                    Tiene derecho a un reembolso de su banco según los términos y
+                                                    condiciones de su acuerdo con su banco. El reembolso debe reclamarse
+                                                    en un plazo de 8 semanas a partir de la fecha en que se realizó el
+                                                    cargo en su cuenta.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="checkbox-wrapper">
+                                            <input id="save_payment_method" name="save_payment_method" type="checkbox"
+                                                   checked class="checkbox-input">
+                                            <label for="save_payment_method" class="checkbox-label">
+                                                Guardar este Método de Pago para Futuras Compras.
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Place Order Button -->
-                            <button type="submit" id="place-order-button" class="primary-btn">
-                                Realizar Compra
-                            </button>
-                        </form>
+                                <!-- Place Order Button -->
+                                <button type="submit" id="place-order-button" class="primary-btn">
+                                    Realizar Compra
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right column: Order Summary -->
-            <div class="lg:col-span-1">
-                <div class="summary-card">
-                    <div class="summary-header">
-                        <h2 class="summary-title">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                            </svg>
-                            Resumen del Envío
-                        </h2>
-                    </div>
+                <!-- Right column: Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <h2 class="summary-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                     fill="currentColor">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                                </svg>
+                                Resumen del Envío
+                            </h2>
+                        </div>
 
-                    <div class="summary-content">
-                        <div class="order-items">
-                            {% for item in cart %}
-                            <div class="order-item">
-                                {% if item.image_url %}
-                                    <img class="item-image" src="{{ item.image_url }}" alt="{{ item.product.name }}">
-                                {% else %}
-                                    <img class="item-image" src="https://via.placeholder.com/150" alt="{{ item.product.name }}">
-                                {% endif %}
-                                <div class="item-details">
-                                    <h4>{{ item.product.name }}</h4>
-                                    <p>Qty: {{ item.quantity }}</p>
-                                    <p>${{ item.total_price }}</p>
+                        <div class="summary-content">
+                            <div class="order-items">
+                                {% for item in cart %}
+                                    <div class="order-item">
+                                        {% if item.product.primary_image %}
+                                            <img class="item-image"
+                                                 src="{% url 'product_image' item.product.primary_image.id %}"
+                                                 alt="{{ item.product.name }}">
+                                        {% else %}
+                                            <img class="item-image" src="https://via.placeholder.com/150"
+                                                 alt="{{ item.product.name }}">
+                                        {% endif %}
+                                        <div class="item-details">
+                                            <h4>{{ item.product.name }}</h4>
+                                            <p>Qty: {{ item.quantity }}</p>
+                                            <p>${{ item.total_price }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="order-totals">
+                                <div class="total-row">
+                                    <div class="total-label">Subtotal</div>
+                                    <div class="total-amount">${{ cart_total }}</div>
+                                </div>
+                                <div class="total-row">
+                                    <div class="total-label">Envío</div>
+                                    <div class="total-amount">${{ shipping_cost }}</div>
+                                </div>
+                                <div class="total-row">
+                                    <div class="total-label">Total</div>
+                                    <div class="total-amount">${{ order_total }}</div>
                                 </div>
                             </div>
-                            {% endfor %}
-                        </div>
 
-                        <div class="order-totals">
-                            <div class="total-row">
-                                <div class="total-label">Subtotal</div>
-                                <div class="total-amount">${{ cart_total }}</div>
-                            </div>
-                            <div class="total-row">
-                                <div class="total-label">Envío</div>
-                                <div class="total-amount">${{ shipping_cost }}</div>
-                            </div>
-                            <div class="total-row">
-                                <div class="total-label">Total</div>
-                                <div class="total-amount">${{ order_total }}</div>
-                            </div>
+                            <a href="{% url 'checkout' %}" class="back-link">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                     fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                                Volver a Envíos
+                            </a>
                         </div>
-
-                        <a href="{% url 'checkout' %}" class="back-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            Volver a Envíos
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Loading Overlay -->
-<div id="loading-overlay" class="loading-overlay hidden">
-    <div class="loading-content">
-        <div class="loading-spinner"></div>
-        <span class="font-medium">Procesando el Pago...</span>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <span class="font-medium">Procesando el Pago...</span>
+        </div>
     </div>
-</div>
 
-<!-- Notification -->
-<div id="notification" class="notification">
-    <div class="notification-content">
-        <span id="notification-message" class="notification-message">Por favor, seleccione un Método de Pago</span>
-        <button type="button" class="notification-close" onclick="dismissNotification()">
-            <svg fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-            </svg>
-        </button>
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <span id="notification-message" class="notification-message">Por favor, seleccione un Método de Pago</span>
+            <button type="button" class="notification-close" onclick="dismissNotification()">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
     </div>
-</div>
 
-<!-- Stripe.js -->
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-    // Initialize Stripe
-    const stripe = Stripe('{{ stripe_publishable_key }}');
-    const elements = stripe.elements();
-    let cardElement = null;
-    let ibanElement = null;
-    let paymentType = 'card';
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        // Initialize Stripe
+        const stripe = Stripe('{{ stripe_publishable_key }}');
+        const elements = stripe.elements();
+        let cardElement = null;
+        let ibanElement = null;
+        let paymentType = 'card';
 
-    function setupCardElement() {
-        // Create card Element
-        cardElement = elements.create('card', {
-            style: {
-                base: {
-                    color: '#32325d',
-                    fontFamily: '"Helvetica Neue", sans-serif',
-                    fontSmoothing: 'antialiased',
-                    fontSize: '16px',
-                    '::placeholder': {
-                        color: '#aab7c4'
-                    }
-                },
-                invalid: {
-                    color: '#fa755a',
-                    iconColor: '#fa755a'
-                }
-            }
-        });
-
-        // Mount the card Element
-        cardElement.mount('#card-element');
-
-        // Handle real-time validation errors
-        cardElement.on('change', function(event) {
-            const displayError = document.getElementById('card-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        });
-    }
-
-    function setupIbanElement() {
-        // Create IBAN Element
-        ibanElement = elements.create('iban', {
-            style: {
-                base: {
-                    color: '#32325d',
-                    fontFamily: '"Helvetica Neue", sans-serif',
-                    fontSmoothing: 'antialiased',
-                    fontSize: '16px',
-                    '::placeholder': {
-                        color: '#aab7c4'
-                    }
-                },
-                invalid: {
-                    color: '#fa755a',
-                    iconColor: '#fa755a'
-                }
-            },
-            supportedCountries: ['SEPA']
-        });
-
-        // Mount the IBAN Element
-        ibanElement.mount('#iban-element');
-
-        // Handle real-time validation errors
-        ibanElement.on('change', function(event) {
-            const displayError = document.getElementById('iban-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        });
-    }
-
-    $(document).ready(function() {
-        // Setup card Element initially
-        setupCardElement();
-
-        // Handle "Add new payment method" checkbox
-        $('#add_new_payment').change(function() {
-            if ($(this).is(':checked')) {
-                $('#new_payment_section').removeClass('hidden');
-                $('input[name="payment_method"]').prop('disabled', true);
-            } else {
-                $('#new_payment_section').addClass('hidden');
-                $('input[name="payment_method"]').prop('disabled', false);
-            }
-        });
-
-        // Handle toggle between card and bank account
-        $('#use_bank_account').change(function() {
-            if ($(this).is(':checked')) {
-                $('#card-element-container').addClass('hidden');
-                $('#sepa-element-container').removeClass('hidden');
-                paymentType = 'sepa_debit';
-                if (!ibanElement) {
-                    setupIbanElement();
-                }
-            } else {
-                $('#card-element-container').removeClass('hidden');
-                $('#sepa-element-container').addClass('hidden');
-                paymentType = 'card';
-            }
-        });
-
-        // Form submission handler
-        $('#payment-form').submit(function(e) {
-            e.preventDefault();
-
-            // Show loading overlay
-            $('#loading-overlay').removeClass('hidden');
-            $('#place-order-button').prop('disabled', true);
-
-            // Check if using existing payment method or creating a new one
-            const useExistingPayment = !$('#add_new_payment').is(':checked') && $('input[name="payment_method"]:checked').length > 0;
-
-            if (useExistingPayment) {
-                // Using existing payment method
-                const paymentMethodId = $('input[name="payment_method"]:checked').val();
-                processPayment(paymentMethodId);
-            } else {
-                // Creating a new payment method
-                if (paymentType === 'card') {
-                    // Create payment method with card
-                    stripe.createPaymentMethod({
-                        type: 'card',
-                        card: cardElement,
-                    }).then(function(result) {
-                        if (result.error) {
-                            handlePaymentError(result.error.message);
-                        } else {
-                            processPayment(result.paymentMethod.id);
+        function setupCardElement() {
+            // Create card Element
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        color: '#32325d',
+                        fontFamily: '"Helvetica Neue", sans-serif',
+                        fontSmoothing: 'antialiased',
+                        fontSize: '16px',
+                        '::placeholder': {
+                            color: '#aab7c4'
                         }
-                    });
-                } else if (paymentType === 'sepa_debit') {
-                    // Check account holder name
-                    const accountHolderName = $('#account_holder_name').val();
-                    if (!accountHolderName) {
-                        handlePaymentError('Por favor, introduzca el nombre de la cuenta.');
-                        return;
+                    },
+                    invalid: {
+                        color: '#fa755a',
+                        iconColor: '#fa755a'
                     }
-
-                    // Create payment method with IBAN
-                    stripe.createPaymentMethod({
-                        type: 'sepa_debit',
-                        sepa_debit: ibanElement,
-                        billing_details: {
-                            name: accountHolderName,
-                            email: '{{ user.email }}'
-                        }
-                    }).then(function(result) {
-                        if (result.error) {
-                            handlePaymentError(result.error.message);
-                        } else {
-                            processPayment(result.paymentMethod.id);
-                        }
-                    });
                 }
-            }
-        });
+            });
 
-        function processPayment(paymentMethodId) {
-            // Create payment intent
-            $.ajax({
-                url: '{% url "create_payment_intent" %}',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    payment_method_id: paymentMethodId,
-                    save_payment_method: $('#save_payment_method').is(':checked')
-                }),
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-CSRFToken', $('input[name="csrfmiddlewaretoken"]').val());
-                },
-                success: function(response) {
-                    if (response.success) {
-                        if (response.requires_action) {
-                            // Use Stripe.js to handle required card action
-                            stripe.handleCardAction(
-                                response.payment_intent_client_secret
-                            ).then(function(result) {
-                                if (result.error) {
-                                    handlePaymentError(result.error.message);
-                                } else {
-                                    // The card action has been handled
-                                    // The PaymentIntent can be confirmed again on the server
-                                    window.location.href = response.redirect_url;
-                                }
-                            });
-                        } else {
-                            // No additional authentication required
-                            window.location.href = response.redirect_url;
-                        }
-                    } else {
-                        handlePaymentError(response.message || 'Ha ocurrido un error procesando su pago.');
-                    }
-                },
-                error: function() {
-                    handlePaymentError('Ha ocurrido un error. Por favor inténtelo de nuevo.');
+            // Mount the card Element
+            cardElement.mount('#card-element');
+
+            // Handle real-time validation errors
+            cardElement.on('change', function (event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
                 }
             });
         }
 
-        function handlePaymentError(message) {
-            $('#loading-overlay').addClass('hidden');
-            $('#place-order-button').prop('disabled', false);
-            showNotification(message);
+        function setupIbanElement() {
+            // Create IBAN Element
+            ibanElement = elements.create('iban', {
+                style: {
+                    base: {
+                        color: '#32325d',
+                        fontFamily: '"Helvetica Neue", sans-serif',
+                        fontSmoothing: 'antialiased',
+                        fontSize: '16px',
+                        '::placeholder': {
+                            color: '#aab7c4'
+                        }
+                    },
+                    invalid: {
+                        color: '#fa755a',
+                        iconColor: '#fa755a'
+                    }
+                },
+                supportedCountries: ['SEPA']
+            });
+
+            // Mount the IBAN Element
+            ibanElement.mount('#iban-element');
+
+            // Handle real-time validation errors
+            ibanElement.on('change', function (event) {
+                const displayError = document.getElementById('iban-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
         }
-    });
 
-    // Function to show notification - matching base.html style
-    function showNotification(message) {
-        const $notification = $('#notification');
-        const $notificationMessage = $('#notification-message');
+        $(document).ready(function () {
+            // Setup card Element initially
+            setupCardElement();
 
-        // Set message text
-        $notificationMessage.text(message);
+            // Handle "Add new payment method" checkbox
+            $('#add_new_payment').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#new_payment_section').removeClass('hidden');
+                    $('input[name="payment_method"]').prop('disabled', true);
+                } else {
+                    $('#new_payment_section').addClass('hidden');
+                    $('input[name="payment_method"]').prop('disabled', false);
+                }
+            });
 
-        // Show notification with animation
-        $notification.addClass('show');
+            // Handle toggle between card and bank account
+            $('#use_bank_account').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#card-element-container').addClass('hidden');
+                    $('#sepa-element-container').removeClass('hidden');
+                    paymentType = 'sepa_debit';
+                    if (!ibanElement) {
+                        setupIbanElement();
+                    }
+                } else {
+                    $('#card-element-container').removeClass('hidden');
+                    $('#sepa-element-container').addClass('hidden');
+                    paymentType = 'card';
+                }
+            });
 
-        // Auto-dismiss after 5 seconds (matching base.html timing)
-        setTimeout(function() {
-            dismissNotification();
-        }, 5000);
-    }
+            // Form submission handler
+            $('#payment-form').submit(function (e) {
+                e.preventDefault();
 
-    // Function to dismiss notification - matching base.html behavior
-    function dismissNotification() {
-        const $notification = $('#notification');
-        $notification.removeClass('show');
-    }
-</script>
+                // Show loading overlay
+                $('#loading-overlay').removeClass('hidden');
+                $('#place-order-button').prop('disabled', true);
+
+                // Check if using existing payment method or creating a new one
+                const useExistingPayment = !$('#add_new_payment').is(':checked') && $('input[name="payment_method"]:checked').length > 0;
+
+                if (useExistingPayment) {
+                    // Using existing payment method
+                    const paymentMethodId = $('input[name="payment_method"]:checked').val();
+                    processPayment(paymentMethodId);
+                } else {
+                    // Creating a new payment method
+                    if (paymentType === 'card') {
+                        // Create payment method with card
+                        stripe.createPaymentMethod({
+                            type: 'card',
+                            card: cardElement,
+                        }).then(function (result) {
+                            if (result.error) {
+                                handlePaymentError(result.error.message);
+                            } else {
+                                processPayment(result.paymentMethod.id);
+                            }
+                        });
+                    } else if (paymentType === 'sepa_debit') {
+                        // Check account holder name
+                        const accountHolderName = $('#account_holder_name').val();
+                        if (!accountHolderName) {
+                            handlePaymentError('Por favor, introduzca el nombre de la cuenta.');
+                            return;
+                        }
+
+                        // Create payment method with IBAN
+                        stripe.createPaymentMethod({
+                            type: 'sepa_debit',
+                            sepa_debit: ibanElement,
+                            billing_details: {
+                                name: accountHolderName,
+                                email: '{{ user.email }}'
+                            }
+                        }).then(function (result) {
+                            if (result.error) {
+                                handlePaymentError(result.error.message);
+                            } else {
+                                processPayment(result.paymentMethod.id);
+                            }
+                        });
+                    }
+                }
+            });
+
+            function processPayment(paymentMethodId) {
+                // Create payment intent
+                $.ajax({
+                    url: '{% url "create_payment_intent" %}',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        payment_method_id: paymentMethodId,
+                        save_payment_method: $('#save_payment_method').is(':checked')
+                    }),
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', $('input[name="csrfmiddlewaretoken"]').val());
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            if (response.requires_action) {
+                                // Use Stripe.js to handle required card action
+                                stripe.handleCardAction(
+                                    response.payment_intent_client_secret
+                                ).then(function (result) {
+                                    if (result.error) {
+                                        handlePaymentError(result.error.message);
+                                    } else {
+                                        // The card action has been handled
+                                        // The PaymentIntent can be confirmed again on the server
+                                        window.location.href = response.redirect_url;
+                                    }
+                                });
+                            } else {
+                                // No additional authentication required
+                                window.location.href = response.redirect_url;
+                            }
+                        } else {
+                            handlePaymentError(response.message || 'Ha ocurrido un error procesando su pago.');
+                        }
+                    },
+                    error: function () {
+                        handlePaymentError('Ha ocurrido un error. Por favor inténtelo de nuevo.');
+                    }
+                });
+            }
+
+            function handlePaymentError(message) {
+                $('#loading-overlay').addClass('hidden');
+                $('#place-order-button').prop('disabled', false);
+                showNotification(message);
+            }
+        });
+
+        // Function to show notification - matching base.html style
+        function showNotification(message) {
+            const $notification = $('#notification');
+            const $notificationMessage = $('#notification-message');
+
+            // Set message text
+            $notificationMessage.text(message);
+
+            // Show notification with animation
+            $notification.addClass('show');
+
+            // Auto-dismiss after 5 seconds (matching base.html timing)
+            setTimeout(function () {
+                dismissNotification();
+            }, 5000);
+        }
+
+        // Function to dismiss notification - matching base.html behavior
+        function dismissNotification() {
+            const $notification = $('#notification');
+            $notification.removeClass('show');
+        }
+    </script>
 {% endblock %}
