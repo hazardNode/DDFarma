@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Order Confirmed - {{ block.super }}{% endblock %}
+{% block title %}Pedido Confirmado - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -738,7 +738,7 @@
                                     <td data-label="Product">
                                         <div class="product-cell">
                                             {% if item.product.primary_image %}
-                                                <img class="product-image" src="{{ item.product.primary_image.url }}" alt="{{ item.product.name }}">
+                                                <img class="product-image" src="{% url 'product_image' item.product.primary_image.id %}" alt="{{ item.product.name }}">
                                             {% else %}
                                                 <div class="product-image bg-gray-200"></div>
                                             {% endif %}
@@ -746,13 +746,13 @@
                                         </div>
                                     </td>
                                     <td data-label="Price">
-                                        <div class="detail-value">${{ item.price_at_purchase }}</div>
+                                        <div class="detail-value">€{{ item.price_at_purchase }}</div>
                                     </td>
                                     <td data-label="Quantity">
                                         <div class="detail-value">{{ item.quantity }}</div>
                                     </td>
                                     <td data-label="Subtotal">
-                                        <div class="detail-value font-semibold">${{ item.get_cost }}</div>
+                                        <div class="detail-value font-semibold">€{{ item.get_cost }}</div>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -765,15 +765,15 @@
                     <div class="summary-table">
                         <div class="summary-row">
                             <div class="summary-label">Subtotal</div>
-                            <div class="summary-value">${{ order.subtotal }}</div>
+                            <div class="summary-value">€{{ order.subtotal }}</div>
                         </div>
                         <div class="summary-row">
                             <div class="summary-label">Envio</div>
-                            <div class="summary-value">${{ order.shipping_cost }}</div>
+                            <div class="summary-value">€{{ order.shipping_cost }}</div>
                         </div>
                         <div class="summary-row">
                             <div class="summary-label">Total</div>
-                            <div class="summary-value">${{ order.total_amount }}</div>
+                            <div class="summary-value">€{{ order.total_amount }}</div>
                         </div>
                     </div>
                 </div>

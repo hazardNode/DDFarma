@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Your Shopping Cart - {{ block.super }}{% endblock %}
+{% block title %}Tu Carrito de Compras - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -401,6 +401,28 @@
         left: 200%;
     }
 
+    /* Login prompt styles */
+    .login-prompt {
+        background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+        color: #92400e;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-prompt a {
+        color: #7c2d12;
+        text-decoration: underline;
+        font-weight: 700;
+    }
+
+    .login-prompt a:hover {
+        color: #451a03;
+    }
+
     /* Empty cart state */
     .empty-cart {
         text-align: center;
@@ -654,29 +676,36 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="cart-header">
-            <h1 class="cart-title">Shopping Cart</h1>
-            <p class="cart-subtitle">Review your items and proceed to checkout</p>
+            <h1 class="cart-title">Carrito de Compras</h1>
+            <p class="cart-subtitle">Revisa tus productos y procede al pago</p>
         </div>
 
         <!-- Cart Container -->
         <div id="cart-container">
             {% if cart|length > 0 %}
                 <div class="cart-content">
+                    <!-- Login prompt for non-authenticated users -->
+                    {% if not user.is_authenticated %}
+                        <div class="login-prompt">
+                            Para proceder al pago, necesitas <a href="{% url 'account_login' %}?next={% url 'checkout' %}">iniciar sesión</a> o <a href="{% url 'account_signup' %}?next={% url 'checkout' %}">crear una cuenta</a>.
+                        </div>
+                    {% endif %}
+
                     <!-- Cart Items Table -->
                     <table class="cart-table">
                         <thead class="table-header">
                             <tr>
-                                <th>Product</th>
-                                <th>Unit Price</th>
-                                <th>Quantity</th>
+                                <th>Producto</th>
+                                <th>Precio Unitario</th>
+                                <th>Cantidad</th>
                                 <th>Subtotal</th>
-                                <th>Actions</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="cart-items">
                             {% for item in cart %}
                                 <tr class="cart-item" id="cart-item-{{ item.product.id }}" data-product-id="{{ item.product.id }}">
-                                    <td data-label="Product">
+                                    <td data-label="Producto">
                                         <div class="product-info">
                                             {% if item.image_url %}
                                                 <img class="product-image" src="{{ item.image_url }}" alt="{{ item.product.name }}">
@@ -692,10 +721,10 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td data-label="Unit Price">
+                                    <td data-label="Precio Unitario">
                                         <div class="price-display">${{ item.price }}</div>
                                     </td>
-                                    <td data-label="Quantity">
+                                    <td data-label="Cantidad">
                                         <div class="quantity-container">
                                             <button type="button" class="quantity-btn quantity-btn-dec">−</button>
                                             <input type="number"
@@ -709,8 +738,8 @@
                                     <td data-label="Subtotal">
                                         <div class="subtotal-display item-subtotal">${{ item.total_price }}</div>
                                     </td>
-                                    <td data-label="Actions">
-                                        <button type="button" class="remove-btn remove-item">Remove</button>
+                                    <td data-label="Acciones">
+                                        <button type="button" class="remove-btn remove-item">Eliminar</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -726,11 +755,17 @@
                             </div>
                             <div class="action-buttons">
                                 <a href="{% url 'shop' %}" class="btn btn-secondary">
-                                    Continue Shopping
+                                    Continuar Comprando
                                 </a>
-                                <a href="{% url 'checkout' %}" class="btn btn-primary">
-                                    Proceed to Checkout
-                                </a>
+                                {% if user.is_authenticated %}
+                                    <a href="{% url 'checkout' %}" class="btn btn-primary">
+                                        Proceder al Pago
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'account_login' %}?next={% url 'checkout' %}" class="btn btn-primary">
+                                        Iniciar Sesión para Pagar
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -742,10 +777,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </div>
-                    <h3>Your cart is empty</h3>
-                    <p>Start shopping to add products to your cart.</p>
+                    <h3>Tu carrito está vacío</h3>
+                    <p>Comienza a comprar para agregar productos a tu carrito.</p>
                     <a href="{% url 'shop' %}" class="btn btn-primary">
-                        Go to Shop
+                        Ir a la Tienda
                     </a>
                 </div>
             {% endif %}
@@ -756,7 +791,7 @@
 <!-- Notification -->
 <div id="notification" class="notification">
     <div class="notification-content">
-        <span id="notification-message" class="notification-message">Cart updated successfully!</span>
+        <span id="notification-message" class="notification-message">¡Carrito actualizado exitosamente!</span>
         <button type="button" class="notification-close" onclick="dismissNotification()">
             <svg fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -807,12 +842,12 @@
                     if (response.success) {
                         console.log("Cart updated successfully:", response.cart);
                         updateCartUI(response.cart);
-                        showNotification('Cart updated successfully!');
+                        showNotification('¡Carrito actualizado exitosamente!');
                     }
                 },
                 error: function (error) {
                     console.error('Error:', error);
-                    showNotification('Error updating cart', 'error');
+                    showNotification('Error al actualizar el carrito', 'error');
                 },
                 complete: function() {
                     $row.removeClass('loading');
@@ -842,9 +877,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
                         </div>
-                        <h3>Your cart is empty</h3>
-                        <p>Start shopping to add products to your cart.</p>
-                        <a href="{% url 'shop' %}" class="btn btn-primary">Go to Shop</a>
+                        <h3>Tu carrito está vacío</h3>
+                        <p>Comienza a comprar para agregar productos a tu carrito.</p>
+                        <a href="{% url 'shop' %}" class="btn btn-primary">Ir a la Tienda</a>
                     </div>
                 `);
                 return;

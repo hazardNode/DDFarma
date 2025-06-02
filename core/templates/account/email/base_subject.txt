@@ -1,0 +1,1 @@
+{% if email_type == 'email_confirmation' %}Confirma tu dirección de correo electrónico{% elif email_type == 'email_confirmation_signup' %}Bienvenido a {{ site_name }} - Confirma tu correo{% elif email_type == 'password_reset' %}Restablece tu contraseña{% endif %}

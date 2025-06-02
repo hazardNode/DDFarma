@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Account - {{ block.super }}{% endblock %}
+{% block title %}Perfil - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -649,7 +649,7 @@
                         userInfoName.textContent = `${firstName} ${lastName}`;
                     }
                 } else {
-                    showNotification(data.message || 'An error occurred', 'error');
+                    showNotification(data.message || 'Ha ocurrido un error', 'error');
                 }
             })
             .catch(error => {
@@ -658,7 +658,7 @@
                 saveButton.classList.remove('loading-btn');
 
                 console.error('Error:', error);
-                showNotification('An error occurred while updating your profile', 'error');
+                showNotification('Ha ocurrido un error actualizando tu perfil', 'error');
             });
         });
     });

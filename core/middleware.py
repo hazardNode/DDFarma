@@ -34,18 +34,18 @@ class RoleBasedAccessMiddleware:
         # For admin-only URLs
         if url_name in self.admin_urls:
             if not request.user.is_authenticated:
-                messages.error(request, "You need to login to access this page.")
+                messages.error(request, "Necesitas ingresar para acceder a esta página.")
                 return redirect('account_login')
 
             # If user is authenticated but not an admin
             if not hasattr(request.user, 'role') or request.user.role is None or request.user.role.role_name != 'ADMIN':
-                messages.error(request, "You don't have permission to access this page.")
+                messages.error(request, "No tienes permiso para acceder a esta página.")
                 return redirect('shop')
 
         # For authenticated-only URLs
         elif url_name in self.authenticated_urls:
             if not request.user.is_authenticated:
-                messages.error(request, "You need to login to access this page.")
+                messages.error(request, "Necesitas ingresar para acceder a esta página.")
                 return redirect('account_login')
 
         return self.get_response(request)

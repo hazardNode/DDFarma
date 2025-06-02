@@ -70,7 +70,7 @@ def create_payment_method(user, payment_method_id, payment_method_type='card', s
         sepa = stripe_payment_method.sepa_debit
         payment_method.payment_type = 'sepa_debit'
         payment_method.set_bank_account_details(
-            bank_name='SEPA Bank Account',
+            bank_name='Cuenta Bancaria SEPA',
             last4=sepa.last4
         )
 
@@ -97,7 +97,7 @@ def delete_payment_method(payment_method):
         stripe.PaymentMethod.detach(payment_method.payment_method_id)
     except stripe.error.StripeError as e:
         # Log the error but continue to delete from database
-        print(f"Stripe error when detaching payment method: {e}")
+        print(f"Error de Stripe al desvincular el método de pago: {e}")
 
     # Delete the payment method from the database
     payment_method.delete()

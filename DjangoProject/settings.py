@@ -25,7 +25,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, 'DjangoProject/../.env'))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tijn+#@d$vs+8u6n0e#51!x1=j2ir##wbhqu=r!rqv_(tr9xmv'
+SECRET_KEY = '9qb-+0pn=^kd4(2mwz3ftun=9h&qtgd1#+65+x+2_$z=ios$+$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -91,11 +91,11 @@ WSGI_APPLICATION = 'DjangoProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django_ecommerce',  # Replace with your database name
-        'USER': 'postgres',  # Replace with your database username
-        'PASSWORD': '123456',  # Replace with your database password
-        'HOST': 'localhost',  # Use 'localhost' if running locally; otherwise, use the server IP/hostname
-        'PORT': '5432',  # Default PostgreSQL port
+        'NAME': env('DB_NAME', default='django_ecommerce'),
+        'USER': env('DB_USER', default='postgres'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST', default='localhost'),
+        'PORT': env('DB_PORT', default='5432'),
     }
 }
 
@@ -124,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'UTC'
 
@@ -136,7 +136,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -184,3 +185,6 @@ PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
 
 # Ensure you're using the standard Django token generator
 ACCOUNT_DEFAULT_TOKEN_GENERATOR = 'django.contrib.auth.tokens.default_token_generator'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'

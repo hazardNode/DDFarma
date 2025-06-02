@@ -22,12 +22,12 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         if success:
             messages.success(
                 request,
-                f"Your email address {email_address.email} has been confirmed."
+                f"Tu dirección de correo elctrónico {email_address.email} ha sido verificada."
             )
         else:
             messages.error(
                 request,
-                "Unable to confirm your email. Please try again."
+                "No ha sido posible verificar el correo. Por favor inténtelo de nuevo."
             )
 
         return success

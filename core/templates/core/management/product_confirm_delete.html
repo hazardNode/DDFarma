@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Confirm Delete - {{ block.super }}{% endblock %}
+{% block title %}Borrar Producto - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-bold mb-4 text-red-600">Are you sure you want to delete this product?</h2>
+    <h2 class="text-xl font-bold mb-4 text-red-600">¿Estás seguro de que quieres borrar este producto?</h2>
 
     <div class="mb-6">
-        <p class="text-gray-700 font-medium">Product Name: <span class="font-bold">{{ object.name }}</span></p>
+        <p class="text-gray-700 font-medium">Nombre del Producto: <span class="font-bold">{{ object.name }}</span></p>
         <p class="text-gray-700">SKU: <span class="font-bold">{{ object.sku }}</span></p>
-        <p class="text-gray-700">Price: <span class="font-bold">${{ object.price }}</span></p>
+        <p class="text-gray-700">Precio: <span class="font-bold">€{{ object.price }}</span></p>
         <p class="text-gray-700">Stock: <span class="font-bold">{{ object.stock_quantity }} units</span></p>
     </div>
 
@@ -18,11 +18,11 @@
         <div class="flex justify-end space-x-4">
             <button type="submit"
                     class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                Yes, Delete
+                Si, Borrar
             </button>
             <a href="{% url 'product_list' %}"
                class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Cancel
+                Cancelar
             </a>
         </div>
     </form>

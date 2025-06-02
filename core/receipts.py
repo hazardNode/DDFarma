@@ -19,23 +19,23 @@ def generate_receipt_pdf(receipt):
 
     # Company info
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(inch, height - inch, "Your Company Name")
+    p.drawString(inch, height - inch, "Nombre de Tu Empresa")
     p.setFont("Helvetica", 10)
-    p.drawString(inch, height - 1.2 * inch, "Company Address Line 1")
-    p.drawString(inch, height - 1.4 * inch, "City, Province, Postal Code")
-    p.drawString(inch, height - 1.6 * inch, "Tax ID: 123456789")
+    p.drawString(inch, height - 1.2 * inch, "Dirección de la Empresa, Línea 1")
+    p.drawString(inch, height - 1.4 * inch, "Ciudad, Provincia, Código Postal")
+    p.drawString(inch, height - 1.6 * inch, "NIF/CIF: 123456789")
 
     # Receipt header
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(width - 3 * inch, height - inch, "RECEIPT")
+    p.drawString(width - 3 * inch, height - inch, "FACTURA")
     p.setFont("Helvetica", 10)
-    p.drawString(width - 3 * inch, height - 1.2 * inch, f"Receipt #: {receipt.receipt_number}")
-    p.drawString(width - 3 * inch, height - 1.4 * inch, f"Date: {receipt.issue_date.strftime('%Y-%m-%d')}")
-    p.drawString(width - 3 * inch, height - 1.6 * inch, f"Order #: {receipt.order.id}")
+    p.drawString(width - 3 * inch, height - 1.2 * inch, f"N° Factura: {receipt.receipt_number}")
+    p.drawString(width - 3 * inch, height - 1.4 * inch, f"Fecha: {receipt.issue_date.strftime('%d/%m/%Y')}")
+    p.drawString(width - 3 * inch, height - 1.6 * inch, f"N° Pedido: {receipt.order.id}")
 
     # Customer info
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(inch, height - 2.5 * inch, "Billed To:")
+    p.drawString(inch, height - 2.5 * inch, "Facturado A:")
     p.setFont("Helvetica", 10)
     p.drawString(inch, height - 2.7 * inch, receipt.billing_name)
     p.drawString(inch, height - 2.9 * inch, receipt.billing_address)
@@ -44,13 +44,13 @@ def generate_receipt_pdf(receipt):
 
     # Order items
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(inch, height - 4 * inch, "Items:")
+    p.drawString(inch, height - 4 * inch, "Artículos:")
 
     y_position = height - 4.3 * inch
     p.setFont("Helvetica-Bold", 10)
-    p.drawString(inch, y_position, "Product")
-    p.drawString(width - 3 * inch, y_position, "Quantity")
-    p.drawString(width - 2 * inch, y_position, "Price")
+    p.drawString(inch, y_position, "Producto")
+    p.drawString(width - 3 * inch, y_position, "Cantidad")
+    p.drawString(width - 2 * inch, y_position, "Precio")
     p.drawString(width - 1.2 * inch, y_position, "Subtotal")
 
     p.line(inch, y_position - 0.1 * inch, width - inch, y_position - 0.1 * inch)
@@ -61,9 +61,9 @@ def generate_receipt_pdf(receipt):
     for item in receipt.order.items.all():
         p.drawString(inch, y_position, item.product.name[:30])
         p.drawString(width - 3 * inch, y_position, str(item.quantity))
-        p.drawString(width - 2 * inch, y_position, f"${item.price_at_purchase}")
+        p.drawString(width - 2 * inch, y_position, f"€{item.price_at_purchase}")
         subtotal = item.quantity * item.price_at_purchase
-        p.drawString(width - 1.2 * inch, y_position, f"${subtotal}")
+        p.drawString(width - 1.2 * inch, y_position, f"€{subtotal}")
         y_position -= 0.2 * inch
 
     # Summary
@@ -72,33 +72,33 @@ def generate_receipt_pdf(receipt):
     y_position -= 0.3 * inch
 
     p.drawString(width - 3 * inch, y_position, "Subtotal:")
-    p.drawString(width - 1.2 * inch, y_position, f"${receipt.subtotal}")
+    p.drawString(width - 1.2 * inch, y_position, f"€{receipt.subtotal}")
     y_position -= 0.2 * inch
 
-    p.drawString(width - 3 * inch, y_position, "Shipping:")
-    p.drawString(width - 1.2 * inch, y_position, f"${receipt.shipping_cost}")
+    p.drawString(width - 3 * inch, y_position, "Envío:")
+    p.drawString(width - 1.2 * inch, y_position, f"€{receipt.shipping_cost}")
     y_position -= 0.2 * inch
 
-    p.drawString(width - 3 * inch, y_position, "Tax:")
-    p.drawString(width - 1.2 * inch, y_position, f"${receipt.tax_amount}")
+    p.drawString(width - 3 * inch, y_position, "IVA:")
+    p.drawString(width - 1.2 * inch, y_position, f"€{receipt.tax_amount}")
     y_position -= 0.2 * inch
 
     p.setFont("Helvetica-Bold", 10)
     p.drawString(width - 3 * inch, y_position, "Total:")
-    p.drawString(width - 1.2 * inch, y_position, f"${receipt.total_amount}")
+    p.drawString(width - 1.2 * inch, y_position, f"€{receipt.total_amount}")
 
     # Payment info
     y_position -= 0.5 * inch
     p.setFont("Helvetica", 10)
-    p.drawString(inch, y_position, f"Payment Method: {receipt.payment_method}")
+    p.drawString(inch, y_position, f"Método de Pago: {receipt.payment_method}")
     if receipt.payment_transaction_id:
         y_position -= 0.2 * inch
-        p.drawString(inch, y_position, f"Transaction ID: {receipt.payment_transaction_id}")
+        p.drawString(inch, y_position, f"ID de Transacción: {receipt.payment_transaction_id}")
 
     # Footer
     p.setFont("Helvetica-Oblique", 8)
-    p.drawString(inch, inch, "This is an official receipt for tax purposes.")
-    p.drawString(inch, 0.8 * inch, "Thank you for your business!")
+    p.drawString(inch, inch, "Este es un recibo oficial para fines fiscales.")
+    p.drawString(inch, 0.8 * inch, "¡Gracias por su compra!")
 
     p.showPage()
     p.save()
@@ -113,7 +113,7 @@ def download_receipt(request, order_id):
         # Check if user is admin or the order owner
         order = Order.objects.get(id=order_id)
         if not request.user.is_staff and request.user != order.user:
-            return HttpResponse("Unauthorized", status=403)
+            return HttpResponse("No autorizado", status=403)
 
         # Get or create receipt
         receipt, created = Receipt.objects.get_or_create(
@@ -128,7 +128,7 @@ def download_receipt(request, order_id):
                 'billing_city': order.shipping_address.city,
                 'billing_province': order.shipping_address.province,
                 'billing_postal_code': order.shipping_address.postal_code,
-                'payment_method': order.payment_set.first().payment_method if order.payment_set.exists() else "Unknown",
+                'payment_method': order.payment_set.first().payment_method if order.payment_set.exists() else "Desconocido",
                 'payment_transaction_id': order.payment_set.first().transaction_id if order.payment_set.exists() else None,
             }
         )
@@ -137,11 +137,11 @@ def download_receipt(request, order_id):
 
         # Create HTTP response with PDF
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="receipt_{receipt.receipt_number}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="factura_{receipt.receipt_number}.pdf"'
         return response
 
     except Order.DoesNotExist:
-        return HttpResponse("Order not found", status=404)
+        return HttpResponse("Pedido no encontrado", status=404)
 
 
 # Add to core/receipts.py
@@ -149,7 +149,7 @@ def download_receipt(request, order_id):
 def bulk_download_receipts(request):
     """Download multiple receipts as a ZIP file"""
     if request.user.role == "ADMIN":
-        return HttpResponse("Unauthorized", status=403)
+        return HttpResponse("No autorizado", status=403)
 
     # Get parameters
     all_orders = request.GET.get('all') == 'true'
@@ -167,7 +167,7 @@ def bulk_download_receipts(request):
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
     except ValueError as e:
-        return HttpResponse(f"Invalid date format: {str(e)}", status=400)
+        return HttpResponse(f"Formato de fecha inválido: {str(e)}", status=400)
 
     # Query orders with better logic
     orders = Order.objects.all()
@@ -186,10 +186,10 @@ def bulk_download_receipts(request):
         orders = orders.filter(order_date__date__lte=end_date)
     else:
         # If no criteria provided and not "all", return error
-        return HttpResponse("Please select 'All Orders' or provide date range", status=400)
+        return HttpResponse("Por favor selecciona 'Todos los Pedidos' o proporciona un rango de fechas", status=400)
 
     if not orders.exists():
-        return HttpResponse("No orders found for the selected criteria", status=404)
+        return HttpResponse("No se encontraron pedidos para los criterios seleccionados", status=404)
 
     # Create a ZIP file in memory
     buffer = BytesIO()
@@ -201,7 +201,7 @@ def bulk_download_receipts(request):
                     subtotal = sum(item.price_at_purchase * item.quantity for item in order.items.all())
 
                     # Get payment method info correctly
-                    payment_method_name = "Unknown"
+                    payment_method_name = "Desconocido"
                     payment_transaction_id = None
 
                     # Try to get payment method from the order's payment_method field
@@ -245,20 +245,20 @@ def bulk_download_receipts(request):
                     pdf_buffer = generate_receipt_pdf(receipt)
 
                     # Add to ZIP with a safe filename
-                    safe_filename = f"receipt_order_{order.id}_{receipt.receipt_number}.pdf"
+                    safe_filename = f"factura_pedido_{order.id}_{receipt.receipt_number}.pdf"
                     zip_file.writestr(safe_filename, pdf_buffer.getvalue())
 
                 except Exception as e:
                     # Log the error but continue processing other orders
-                    print(f"Error processing order {order.id}: {str(e)}")
+                    print(f"Error procesando pedido {order.id}: {str(e)}")
                     continue
 
     except Exception as e:
-        return HttpResponse(f"Error creating ZIP file: {str(e)}", status=500)
+        return HttpResponse(f"Error creando archivo ZIP: {str(e)}", status=500)
 
     # Return ZIP file
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/zip')
     timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-    response['Content-Disposition'] = f'attachment; filename="receipts_{timestamp}.zip"'
+    response['Content-Disposition'] = f'attachment; filename="facturas_{timestamp}.zip"'
     return response

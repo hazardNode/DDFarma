@@ -1,11 +1,24 @@
 # core/views.py
+import mimetypes
+import os
+
+from allauth.account.models import EmailAddress
+from django.core.exceptions import PermissionDenied
+from wsgiref.util import FileWrapper
 from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import resolve, reverse_lazy
-from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from django.views import View
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_POST, require_safe
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from allauth.account.views import ConfirmEmailView, PasswordResetView, PasswordResetFromKeyView
 from django.contrib import messages
+from pip._internal.utils import logging
+
 from .cart import Cart
 from django.views.generic.edit import FormView
 from core.models import Product, Order, Category, User, ProductImage, PaymentMethod, Address, ShippingMethod, OrderItem
@@ -14,7 +27,7 @@ from django import forms
 from .stripe_utils import create_payment_method, delete_payment_method, set_default_payment_method, create_stripe_customer
 import json
 import stripe
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404, HttpResponse, HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.db import transaction
@@ -24,6 +37,12 @@ from allauth.account.utils import url_str_to_user_pk
 from allauth.account.utils import user_pk_to_url_str
 from django.contrib.auth import get_user_model
 from allauth.account.forms import default_token_generator
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes
+from .tokens import account_activation_token
+
 
 def product_list(request):
     products = Product.objects.all()
@@ -54,11 +73,11 @@ def product_create(request):
                             is_primary=is_primary
                         )
 
-                    messages.success(request, 'Product created successfully with images.')
+                    messages.success(request, 'Producto creado exitosamente con imágenes.')
                 else:
-                    messages.warning(request, 'Product created but there was an issue with the image upload.')
+                    messages.warning(request, 'Producto creado pero hubo un problema con la subida de imágenes.')
             else:
-                messages.success(request, 'Product created successfully.')
+                messages.success(request, 'Producto creado exitosamente.')
 
             return redirect('product_list')
     else:
@@ -68,7 +87,7 @@ def product_create(request):
     return render(request, 'core/management/form.html', {
         'form': form,
         'image_form': image_form,
-        'title': 'Create New Product',
+        'title': 'Crear Nuevo Producto',
         'is_create': True,  # Flag to indicate this is a create form
         'is_product_form': True
     })
@@ -100,11 +119,11 @@ def product_update(request, pk):
                             is_primary=is_primary
                         )
 
-                    messages.success(request, 'Product and images updated successfully.')
+                    messages.success(request, 'Producto e imágenes actualizados exitosamente.')
                 else:
-                    messages.warning(request, 'Product updated but there was an issue with the image upload.')
+                    messages.warning(request, 'Producto actualizado pero hubo un problema con la subida de imágenes.')
             else:
-                messages.success(request, 'Product updated successfully.')
+                messages.success(request, 'Producto actualizado exitosamente.')
 
             return redirect('product_list')
     else:
@@ -114,7 +133,7 @@ def product_update(request, pk):
     return render(request, 'core/management/form.html', {
         'form': form,
         'object': product,
-        'title': f'Edit {product.name}',
+        'title': f'Editar {product.name}',
         'image_form': image_form,
         'images': product.images.all(),
         'is_create': False,
@@ -137,7 +156,7 @@ def set_primary_image(request, pk, image_id):
     image.is_primary = True
     image.save()
 
-    messages.success(request, 'Primary image updated.')
+    messages.success(request, 'Imagen principal actualizada.')
     return redirect('product_update', pk=pk)
 
 
@@ -146,7 +165,7 @@ def delete_image(request, pk, image_id):
     image = get_object_or_404(ProductImage, id=image_id, product=product)
 
     image.delete()
-    messages.success(request, 'Image deleted.')
+    messages.success(request, 'Imagen eliminada.')
     return redirect('product_update', pk=pk)
 def category_list(request):
     categories = Category.objects.all()
@@ -328,7 +347,7 @@ def cart_remove(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
-    messages.success(request, f'{product.name} removed from your cart')
+    messages.success(request, f'{product.name} eliminado de tu carrito')
     return redirect('cart_detail')
 
 
@@ -352,19 +371,90 @@ def update_profile(request):
             user.save()
             return JsonResponse({
                 'success': True,
-                'message': 'Profile updated successfully!'
+                'message': '¡Perfil actualizado exitosamente!'
             })
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'message': f'Error updating profile: {str(e)}'
+                'message': f'Error al actualizar el perfil: {str(e)}'
             })
 
     return JsonResponse({
         'success': False,
-        'message': 'Invalid request method'
+        'message': 'Método de solicitud inválido'
     })
 
+def send_custom_email(request, user, email_address, email_type, **extra_context):
+    """
+    Send a custom email using templates with conditions
+    """
+    from django.contrib.sites.shortcuts import get_current_site
+    from django.template.loader import render_to_string
+    from django.core.mail import EmailMessage
+    from django.utils.encoding import force_bytes
+    from django.utils.http import urlsafe_base64_encode
+    from django.urls import reverse
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        current_site = get_current_site(request)
+        protocol = 'https' if request.is_secure() else 'http'
+
+        # Determinar destinatario
+        recipient_email = email_address.email if hasattr(email_address, 'email') else str(email_address)
+
+        # Base context for all emails
+        context = {
+            'user': user,
+            'site_name': current_site.name,
+            'domain': current_site.domain,
+            'protocol': protocol,
+            'email_type': email_type,
+        }
+
+        # Add specific context based on email type
+        if email_type in ['email_confirmation', 'email_confirmation_signup']:
+            # Generate verification URL
+            if hasattr(email_address, 'pk'):
+                uid = urlsafe_base64_encode(force_bytes(email_address.pk))
+                token = account_activation_token.make_token(email_address)
+            else:
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                token = account_activation_token.make_token(user)
+
+            activate_url = f"{protocol}://{current_site.domain}{reverse('verify_email', kwargs={'uidb64': uid, 'token': token})}"
+            context['activate_url'] = activate_url
+
+        elif email_type == 'password_reset':
+            context['password_reset_url'] = extra_context.get('password_reset_url', '')
+
+        # Add any extra context
+        context.update(extra_context)
+
+        # Render email content using templates
+        subject = render_to_string('account/email/base_subject.txt', context).strip()
+        message = render_to_string('account/email/base_email.txt', context)
+
+        # Send email
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            to=[recipient_email]
+        )
+        email.send()
+
+        logger.info(f"✅ Email '{email_type}' enviado exitosamente a {recipient_email}")
+        print(f"✅ Email '{email_type}' enviado exitosamente a {recipient_email}")
+        return True
+
+    except Exception as e:
+        error_msg = f"❌ Error enviando email '{email_type}' a {recipient_email}: {str(e)}"
+        logger.error(error_msg)
+        print(error_msg)
+        return False
+# Updated email management view
 @login_required
 def email_management(request):
     """View for managing user email addresses."""
@@ -374,74 +464,87 @@ def email_management(request):
             email = request.POST.get('email')
             if email:
                 if EmailAddress.objects.filter(email=email).exists():
-                    messages.error(request, 'This email is already in use.')
+                    messages.error(request, 'Este correo electrónico ya está en uso.')
                 else:
-                    email_address = EmailAddress.objects.add_email(
-                        request, request.user, email, confirm=True)
-                    messages.success(request,
-                                     f'Verification email sent to {email}.')
-                    return redirect('account_email_verification_sent')
+                    # Create email address
+                    email_address = EmailAddress.objects.create(
+                        user=request.user,
+                        email=email,
+                        verified=False,
+                        primary=False
+                    )
 
-        # Handle setting an email as primary
-        elif 'action_primary' in request.POST:
-            email = request.POST.get('email')
-            emailaddress = EmailAddress.objects.get(
-                user=request.user, email=email)
-            if not emailaddress.verified:
-                messages.error(request,
-                               'You cannot set an unverified email as primary.')
-            else:
-                emailaddress.set_as_primary()
-                messages.success(request,
-                                 f'{email} is now your primary email address.')
+                    # Send custom confirmation email
+                    send_custom_email(
+                        request=request,
+                        user=request.user,
+                        email_address=email_address,
+                        email_type='email_confirmation'
+                    )
+
+                    messages.success(request, f'Correo de verificación enviado a {email}.')
+                    return redirect('account_email_verification_sent')
 
         # Handle resending verification email
         elif 'action_send' in request.POST:
             email = request.POST.get('email')
             try:
-                email_address = EmailAddress.objects.get(
-                    user=request.user, email=email)
-                email_address.send_confirmation(request)
-                messages.success(request,
-                                 f'Verification email resent to {email}.')
+                email_address = EmailAddress.objects.get(user=request.user, email=email)
+
+                # Send custom confirmation email
+                send_custom_email(
+                    request=request,
+                    user=request.user,
+                    email_address=email_address,
+                    email_type='email_confirmation'
+                )
+
+                messages.success(request, f'Correo de verificación reenviado a {email}.')
                 return redirect('account_email_verification_sent')
             except EmailAddress.DoesNotExist:
-                messages.error(request, 'Email address not found.')
+                messages.error(request, 'Dirección de correo no encontrada.')
+
+        # Handle setting an email as primary
+        elif 'action_primary' in request.POST:
+            email = request.POST.get('email')
+            try:
+                emailaddress = EmailAddress.objects.get(user=request.user, email=email)
+                if not emailaddress.verified:
+                    messages.error(request, 'No puedes establecer un correo no verificado como principal.')
+                else:
+                    emailaddress.set_as_primary()
+                    messages.success(request, f'{email} es ahora tu dirección de correo principal.')
+            except EmailAddress.DoesNotExist:
+                messages.error(request, 'Dirección de correo no encontrada.')
 
         # Handle removing an email
         elif 'action_remove' in request.POST:
             email = request.POST.get('email')
             try:
-                email_address = EmailAddress.objects.get(
-                    user=request.user, email=email)
+                email_address = EmailAddress.objects.get(user=request.user, email=email)
 
-                # Check if it's the primary email
                 if email_address.primary:
                     if EmailAddress.objects.filter(user=request.user).count() > 1:
                         messages.error(request,
-                                       'Cannot remove primary email. Set another email as primary first.')
+                                       'No se puede eliminar el correo principal. Establece otro correo como principal primero.')
                         return redirect('account_email')
                     else:
-                        messages.error(request,
-                                       'Cannot remove your only email address.')
+                        messages.error(request, 'No puedes eliminar tu única dirección de correo.')
                         return redirect('account_email')
 
-                # Remove the email
                 email_address.delete()
-                messages.success(request, f'{email} has been removed.')
+                messages.success(request, f'{email} ha sido eliminado.')
             except EmailAddress.DoesNotExist:
-                messages.error(request, 'Email address not found.')
+                messages.error(request, 'Dirección de correo no encontrada.')
 
     # Get all email addresses for the user
     emails = EmailAddress.objects.filter(user=request.user)
-
-    return render(request, 'core/account/email.html', {'emails': emails})
-
+    return render(request, 'account/email.html', {'emails': emails})
 
 @login_required
 def email_verification_sent(request):
     """View shown after a verification email has been sent."""
-    return render(request, 'core/account/email_verification_sent.html')
+    return render(request, 'account/email_verification_sent.html')
 
 
 def verify_email(request, uidb64, token):
@@ -464,14 +567,14 @@ def verify_email(request, uidb64, token):
             'success': True,
             'email': email_address.email
         }
-        messages.success(request, f'Your email {email_address.email} has been verified!')
+        messages.success(request, f'¡Tu correo {email_address.email} ha sido verificado!')
     else:
         context = {
             'success': False,
             'email': request.user.email if request.user.is_authenticated else ''
         }
 
-    return render(request, 'core/account/email_verification.html', context)
+    return render(request, 'account/email_verification.html', context)
 
 
 class CustomConfirmEmailView(ConfirmEmailView):
@@ -483,12 +586,12 @@ class CustomConfirmEmailView(ConfirmEmailView):
         try:
             self.object = self.get_object()
             if self.object.email_address.verified:
-                messages.info(self.request, "This email has already been verified.")
+                messages.info(self.request, "Este correo ya ha sido verificado.")
                 return redirect("/")
         except Exception:
             messages.error(
                 self.request,
-                "This email confirmation link has expired or is invalid. Please request a new confirmation email."
+                "Este enlace de confirmación de correo ha expirado o es inválido. Por favor solicita un nuevo correo de confirmación."
             )
             return redirect("landing_page")
 
@@ -504,7 +607,7 @@ class CustomConfirmEmailView(ConfirmEmailView):
         # Always redirect to home with a message
         messages.success(
             self.request,
-            "Your email address has been confirmed successfully."
+            "Tu dirección de correo ha sido confirmada exitosamente."
         )
         return redirect("landing_page")
 
@@ -545,17 +648,17 @@ def address_create(request):
 
             return JsonResponse({
                 'success': True,
-                'message': 'Address added successfully!'
+                'message': '¡Dirección agregada exitosamente!'
             })
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'message': f'Error adding address: {str(e)}'
+                'message': f'Error al agregar dirección: {str(e)}'
             })
 
     return JsonResponse({
         'success': False,
-        'message': 'Invalid request method'
+        'message': 'Método de solicitud inválido'
     })
 
 
@@ -580,7 +683,7 @@ def address_detail(request, address_id):
     except Address.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'message': 'Address not found'
+            'message': 'Dirección no encontrada'
         })
 
 
@@ -602,17 +705,17 @@ def address_update(request, address_id):
 
             return JsonResponse({
                 'success': True,
-                'message': 'Address updated successfully!'
+                'message': '¡Dirección actualizada exitosamente!'
             })
 
         return JsonResponse({
             'success': False,
-            'message': 'Invalid request method'
+            'message': 'Método de solicitud inválido'
         })
     except Address.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'message': 'Address not found'
+            'message': 'Dirección no encontrada'
         })
 
 
@@ -627,24 +730,24 @@ def address_delete(request, address_id):
             if address.is_default and Address.objects.filter(user=request.user).count() <= 1:
                 return JsonResponse({
                     'success': False,
-                    'message': 'Cannot delete your only address.'
+                    'message': 'No se puede eliminar tu única dirección.'
                 })
 
             address.delete()
 
             return JsonResponse({
                 'success': True,
-                'message': 'Address deleted successfully!'
+                'message': '¡Dirección eliminada exitosamente!'
             })
 
         return JsonResponse({
             'success': False,
-            'message': 'Invalid request method'
+            'message': 'Método de solicitud inválido'
         })
     except Address.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'message': 'Address not found'
+            'message': 'Dirección no encontrada'
         })
 
 
@@ -664,17 +767,17 @@ def address_set_default(request, address_id):
 
             return JsonResponse({
                 'success': True,
-                'message': 'Default address updated successfully!'
+                'message': '¡Dirección predeterminada actualizada exitosamente!'
             })
 
         return JsonResponse({
             'success': False,
-            'message': 'Invalid request method'
+            'message': 'Método de solicitud inválido'
         })
     except Address.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'message': 'Address not found'
+            'message': 'Dirección no encontrada'
         })
 
 
@@ -705,7 +808,7 @@ def payment_create(request):
         if not payment_method_id:
             return JsonResponse({
                 'success': False,
-                'message': 'No payment method ID provided.'
+                'message': 'No se proporcionó ID del método de pago.'
             })
 
         # Create the payment method in our database
@@ -718,7 +821,7 @@ def payment_create(request):
 
         return JsonResponse({
             'success': True,
-            'message': 'Payment method added successfully.',
+            'message': 'Método de pago añadido exitosamente.',
             'payment_method': {
                 'id': payment_method.id,
                 'display_name': payment_method.display_name,
@@ -731,43 +834,43 @@ def payment_create(request):
         # Since it's a decline, stripe.error.CardError will be caught
         return JsonResponse({
             'success': False,
-            'message': f"Card error: {e.error.message}"
+            'message': f"Error de tarjeta: {e.error.message}"
         })
     except stripe.error.RateLimitError:
         # Too many requests made to the API too quickly
         return JsonResponse({
             'success': False,
-            'message': "Rate limit exceeded. Please try again later."
+            'message': "Límite de velocidad excedido. Por favor intenta de nuevo más tarde."
         })
     except stripe.error.InvalidRequestError as e:
         # Invalid parameters were supplied to Stripe's API
         return JsonResponse({
             'success': False,
-            'message': f"Invalid parameters: {e.error.message}"
+            'message': f"Parámetros inválidos: {e.error.message}"
         })
     except stripe.error.AuthenticationError:
         # Authentication with Stripe's API failed
         return JsonResponse({
             'success': False,
-            'message': "Authentication with payment processor failed."
+            'message': "Falló la autenticación con el procesador de pagos."
         })
     except stripe.error.APIConnectionError:
         # Network communication with Stripe failed
         return JsonResponse({
             'success': False,
-            'message': "Network error. Please try again."
+            'message': "Error de red. Por favor intenta de nuevo."
         })
     except stripe.error.StripeError:
         # Display a very generic error to the user
         return JsonResponse({
             'success': False,
-            'message': "Something went wrong. Please try again."
+            'message': "Algo salió mal. Por favor intenta de nuevo."
         })
     except Exception as e:
         # Something else happened, completely unrelated to Stripe
         return JsonResponse({
             'success': False,
-            'message': f"An error occurred: {str(e)}"
+            'message': f"Ocurrió un error: {str(e)}"
         })
 
 
@@ -782,7 +885,7 @@ def payment_delete(request, payment_id):
         if payment_method.is_default and PaymentMethod.objects.filter(user=request.user).count() <= 1:
             return JsonResponse({
                 'success': False,
-                'message': 'Cannot delete your only payment method.'
+                'message': 'No se puede eliminar tu único método de pago.'
             })
 
         # Delete the payment method
@@ -790,18 +893,18 @@ def payment_delete(request, payment_id):
 
         return JsonResponse({
             'success': True,
-            'message': 'Payment method deleted successfully.'
+            'message': 'Método de pago eliminado exitosamente.'
         })
 
     except stripe.error.StripeError as e:
         return JsonResponse({
             'success': False,
-            'message': f"Payment processor error: {str(e)}"
+            'message': f"Error del procesador de pagos: {str(e)}"
         })
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'message': f"An error occurred: {str(e)}"
+            'message': f"Ocurrió un error: {str(e)}"
         })
 
 
@@ -817,18 +920,18 @@ def payment_set_default(request, payment_id):
 
         return JsonResponse({
             'success': True,
-            'message': 'Default payment method updated successfully.'
+            'message': 'Método de pago predeterminado actualizado exitosamente.'
         })
 
     except stripe.error.StripeError as e:
         return JsonResponse({
             'success': False,
-            'message': f"Payment processor error: {str(e)}"
+            'message': f"Error del procesador de pagos: {str(e)}"
         })
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'message': f"An error occurred: {str(e)}"
+            'message': f"Ocurrió un error: {str(e)}"
         })
 
 
@@ -843,7 +946,7 @@ def checkout(request):
 
     # Check if cart is empty
     if len(cart) == 0:
-        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        messages.warning(request, "Tu carrito está vacío. Por favor agrega productos antes de proceder al pago.")
         return redirect('cart_detail')
 
     # Get user's addresses
@@ -881,7 +984,7 @@ def checkout_address_save(request):
         if not shipping_address_id or not shipping_method_id:
             return JsonResponse({
                 'success': False,
-                'message': 'Shipping address and shipping method are required.'
+                'message': 'La dirección de envío y método de envío son requeridos.'
             })
 
         # Store in session for later use
@@ -899,7 +1002,7 @@ def checkout_address_save(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'message': f'An error occurred: {str(e)}'
+            'message': f'Ocurrió un error: {str(e)}'
         })
 
 
@@ -910,13 +1013,13 @@ def checkout_payment(request):
 
     # Check if cart is empty
     if len(cart) == 0:
-        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        messages.warning(request, "Tu carrito está vacío. Por favor agrega productos antes de proceder al pago.")
         return redirect('cart_detail')
 
     # Check if we have the address info
     checkout_data = request.session.get('checkout', {})
     if not checkout_data.get('shipping_address_id') or not checkout_data.get('shipping_method_id'):
-        messages.warning(request, "Please select shipping address and method first.")
+        messages.warning(request, "Por favor selecciona la dirección de envío y método de envío primero.")
         return redirect('checkout')
 
     # Get address and shipping data
@@ -968,14 +1071,14 @@ def create_payment_intent(request):
         if len(cart) == 0:
             return JsonResponse({
                 'success': False,
-                'message': 'Your cart is empty.'
+                'message': 'Tu carrito está vacío.'
             })
 
         checkout_data = request.session.get('checkout', {})
         if not checkout_data.get('shipping_method_id'):
             return JsonResponse({
                 'success': False,
-                'message': 'Shipping method not selected.'
+                'message': 'Método de envío no seleccionado.'
             })
 
         shipping_method = get_object_or_404(ShippingMethod, id=checkout_data['shipping_method_id'])
@@ -1029,12 +1132,12 @@ def create_payment_intent(request):
     except stripe.error.StripeError as e:
         return JsonResponse({
             'success': False,
-            'message': f"Payment processing error: {str(e)}"
+            'message': f"Error de procesamiento de pago: {str(e)}"
         })
     except Exception as e:
         return JsonResponse({
             'success': False,
-            'message': f"An unexpected error occurred: {str(e)}"
+            'message': f"Ocurrió un error inesperado: {str(e)}"
         })
 
 # Update the checkout_complete view to properly handle Decimal conversions
@@ -1048,18 +1151,18 @@ def checkout_complete(request):
 
     # Check if cart is empty
     if len(cart) == 0:
-        messages.warning(request, "Your cart is empty. Please add products before proceeding to checkout.")
+        messages.warning(request, "Tu carrito está vacío. Por favor agrega productos antes de proceder al pago.")
         return redirect('cart_detail')
 
     # Get checkout data from session
     checkout_data = request.session.get('checkout', {})
     if not checkout_data:
-        messages.warning(request, "Checkout information not found.")
+        messages.warning(request, "Información de pago no encontrada.")
         return redirect('checkout')
 
     payment_intent_id = checkout_data.get('payment_intent_id')
     if not payment_intent_id:
-        messages.warning(request, "Payment information not found.")
+        messages.warning(request, "Información de pago no encontrada.")
         return redirect('checkout_payment')
 
     try:
@@ -1068,7 +1171,7 @@ def checkout_complete(request):
 
         # Check payment status
         if payment_intent.status != 'succeeded':
-            messages.error(request, "Payment was not successful. Please try again.")
+            messages.error(request, "El pago no fue exitoso. Por favor intenta de nuevo.")
             return redirect('checkout_payment')
 
         # Get address and shipping data
@@ -1137,7 +1240,7 @@ def checkout_complete(request):
             del request.session['checkout']
 
         # Success message
-        messages.success(request, f"Your order #{order.order_number} has been successfully placed!")
+        messages.success(request, f"¡Tu pedido #{order.order_number} ha sido realizado exitosamente!")
 
         # Redirect to order confirmation
         return render(request, 'checkout/checkout_success.html', {
@@ -1145,10 +1248,10 @@ def checkout_complete(request):
         })
 
     except stripe.error.StripeError as e:
-        messages.error(request, f"Payment error: {str(e)}")
+        messages.error(request, f"Error de pago: {str(e)}")
         return redirect('checkout_payment')
     except Exception as e:
-        messages.error(request, f"An error occurred while processing your order: {str(e)}")
+        messages.error(request, f"Ocurrió un error al procesar tu pedido: {str(e)}")
         return redirect('checkout')
 
 
@@ -1177,7 +1280,7 @@ class CustomPasswordResetView(PasswordResetView):
 
             return JsonResponse({
                 'success': True,
-                'message': f'If an account with email {email} exists, password reset instructions have been sent.',
+                'message': f'Si existe una cuenta con el correo {email}, se han enviado las instrucciones para restablecer la contraseña.',
                 'email': email
             })
 
@@ -1193,7 +1296,7 @@ class CustomPasswordResetView(PasswordResetView):
             return JsonResponse({
                 'success': False,
                 'errors': errors,
-                'message': 'Please correct the errors below.'
+                'message': 'Por favor corrige los errores a continuación.'
             }, status=400)
         # For non-AJAX, use default behavior
         return super().form_invalid(form)
@@ -1217,7 +1320,6 @@ class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
         # After the parent dispatch, check if token_fail was set
         token_fail = getattr(self, 'validlink', None) is False
         print(f"DEBUG: After parent dispatch - token_fail: {token_fail}, validlink: {getattr(self, 'validlink', None)}")
-
         # If we're using set-password, check if we have the user
         if kwargs.get('key') == 'set-password':
             has_user = hasattr(self, 'reset_user') and self.reset_user is not None
@@ -1270,19 +1372,19 @@ class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
                 # If we get here, the password was saved successfully
                 return JsonResponse({
                     'success': True,
-                    'message': 'Your password has been successfully reset! You can now log in with your new password.',
+                    'message': '¡Tu contraseña ha sido restablecida exitosamente! Ahora puedes iniciar sesión con tu nueva contraseña.',
                     'redirect_url': '/account/login/'
                 })
             except Exception as e:
                 print(f"DEBUG: Error saving password: {str(e)}")
                 return JsonResponse({
                     'success': False,
-                    'message': f'An error occurred while resetting your password: {str(e)}'
+                    'message': f'Ocurrió un error al restablecer tu contraseña: {str(e)}'
                 }, status=500)
 
         # For non-AJAX requests, use parent behavior
         response = super().form_valid(form)
-        messages.success(self.request, 'Your password has been successfully reset!')
+        messages.success(self.request, '¡Tu contraseña ha sido restablecida exitosamente!')
         return redirect('/account/login/')
 
     def form_invalid(self, form):
@@ -1307,9 +1409,9 @@ class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
                 'success': False,
                 'errors': errors,
                 'non_field_errors': non_field_errors,
-                'message': 'Please correct the errors below.' if errors else
+                'message': 'Por favor corrige los errores a continuación.' if errors else
                 non_field_errors[0] if non_field_errors else
-                'An error occurred during password reset.'
+                'Ocurrió un error durante el restablecimiento de contraseña.'
             }, status=400)
 
         # For non-AJAX requests, use parent behavior
@@ -1317,13 +1419,13 @@ class CustomPasswordResetFromKeyView(PasswordResetFromKeyView):
 
 class SimplePasswordResetForm(forms.Form):
     password1 = forms.CharField(
-        label="New Password",
-        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Enter your new password'}),
+        label="Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Ingresa tu nueva contraseña'}),
         required=True
     )
     password2 = forms.CharField(
-        label="Confirm New Password",
-        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirm your new password'}),
+        label="Confirmar Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Confirma tu nueva contraseña'}),
         required=True
     )
 
@@ -1337,7 +1439,7 @@ class SimplePasswordResetForm(forms.Form):
 
         if password1 and password2:
             if password1 != password2:
-                raise forms.ValidationError("The two password fields didn't match.")
+                raise forms.ValidationError("Los dos campos de contraseña no coinciden.")
         return password2
 
     def save(self):
@@ -1400,19 +1502,19 @@ class SimplePasswordResetFromKeyView(FormView):
 
                 return JsonResponse({
                     'success': True,
-                    'message': 'Your password has been successfully reset! You can now log in with your new password.',
+                    'message': '¡Tu contraseña ha sido restablecida exitosamente! Ahora puedes iniciar sesión con tu nueva contraseña.',
                     'redirect_url': '/account/login/'
                 })
             except Exception as e:
                 print(f"DEBUG: Error saving password: {str(e)}")
                 return JsonResponse({
                     'success': False,
-                    'message': f'An error occurred while resetting your password: {str(e)}'
+                    'message': f'Ocurrió un error al restablecer tu contraseña: {str(e)}'
                 }, status=500)
 
         # For non-AJAX requests
         form.save()
-        messages.success(self.request, 'Your password has been successfully reset!')
+        messages.success(self.request, '¡Tu contraseña ha sido restablecida exitosamente!')
         return redirect('/account/login/')
 
     def form_invalid(self, form):
@@ -1427,7 +1529,7 @@ class SimplePasswordResetFromKeyView(FormView):
             return JsonResponse({
                 'success': False,
                 'errors': errors,
-                'message': 'Please correct the errors below.'
+                'message': 'Por favor corrige los errores a continuación.'
             }, status=400)
 
         # For non-AJAX requests
@@ -1441,7 +1543,178 @@ def blocked_view(request, *args, **kwargs):
     # messages.info(request, "This feature is currently unavailable.")
     # messages.success(request, "Redirected to home page.")
 
-    messages.warning(request, "Sorry, that page is not available. You've been redirected to the home page.")
+    messages.warning(request, "Lo siento, esa página no está disponible. Has sido redirigido a la página de inicio.")
     return redirect('landing_page')
 
-# Add this debug view to your views.py to check authentication status
+
+logger = logging.getLogger(__name__)
+
+
+@require_safe
+@cache_control(max_age=3600, public=True)
+def serve_product_image(request, image_id):
+    """
+    Simple view to serve product images
+    """
+    try:
+        # Get the product image
+        product_image = get_object_or_404(
+            ProductImage.objects.select_related('product'),
+            id=image_id
+        )
+
+        # Allow all images to show (you can add restrictions later if needed)
+        # if not product_image.product.is_active:
+        #     logger.warning(f"Access to inactive product image: {image_id}")
+        #     raise Http404("Image not found")
+
+        # Check if image file exists
+        if not product_image.image:
+            logger.warning(f"No image file for ProductImage ID: {image_id}")
+            raise Http404("Archivo de imagen no encontrado")
+
+        # Get the file path
+        image_path = product_image.image.path
+
+        # Check if file exists on disk
+        if not os.path.exists(image_path):
+            logger.warning(f"Image file does not exist on disk: {image_path}")
+            raise Http404("Archivo de imagen no encontrado en disco")
+
+        # Get mime type
+        mime_type, _ = mimetypes.guess_type(image_path)
+        if not mime_type or not mime_type.startswith('image/'):
+            mime_type = 'image/jpeg'  # Default fallback
+
+        # Read and serve the file
+        try:
+            with open(image_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type=mime_type)
+                response['Content-Disposition'] = f'inline; filename="{os.path.basename(image_path)}"'
+                response['Cache-Control'] = 'public, max-age=3600'
+                return response
+        except IOError as e:
+            logger.error(f"Error reading image file {image_path}: {str(e)}")
+            raise Http404("Error al leer el archivo de imagen")
+
+    except Http404:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error serving product image {image_id}: {str(e)}")
+        raise Http404("Imagen no encontrada")
+
+
+@require_safe
+@cache_control(max_age=3600)
+def serve_media(request, file_path):
+    """
+    Secure media serving for authenticated users
+    """
+    try:
+        # Basic security check - prevent directory traversal
+        if '..' in file_path or file_path.startswith('/'):
+            raise Http404("Ruta de archivo inválida")
+
+        # Construct full path
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+
+        # Security check - make sure we're still in MEDIA_ROOT
+        if not os.path.abspath(full_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+            raise Http404("Ruta de archivo inválida")
+
+        # Check if file exists
+        if not os.path.exists(full_path) or not os.path.isfile(full_path):
+            raise Http404("Archivo no encontrado")
+
+        # Only allow images
+        mime_type, _ = mimetypes.guess_type(full_path)
+        if not mime_type or not mime_type.startswith('image/'):
+            raise Http404("Archivo no encontrado")
+
+        # Serve the file
+        with open(full_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type=mime_type)
+            response['Content-Disposition'] = f'inline; filename="{os.path.basename(full_path)}"'
+            return response
+
+    except Http404:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving media file {file_path}: {str(e)}")
+        raise Http404("Archivo no encontrado")
+
+
+# Debug view to check product images
+def debug_product_image(request, image_id):
+    """Debug view to check what's happening with product images"""
+    import os
+    try:
+        product_image = ProductImage.objects.select_related('product').get(id=image_id)
+
+        debug_info = {
+            'image_id': image_id,
+            'product_name': product_image.product.name,
+            'product_active': product_image.product.is_active,
+            'has_image': bool(product_image.image),
+            'image_name': product_image.image.name if product_image.image else 'Sin imagen',
+        }
+
+        if product_image.image:
+            debug_info['image_path'] = product_image.image.path
+            debug_info['file_exists'] = os.path.exists(product_image.image.path)
+            debug_info['file_size'] = os.path.getsize(product_image.image.path) if os.path.exists(
+                product_image.image.path) else 'Archivo no encontrado'
+
+        html = "<h2>Información de Debug para ProductImage ID: {}</h2>".format(image_id)
+        for key, value in debug_info.items():
+            html += f"<p><strong>{key}:</strong> {value}</p>"
+
+        return HttpResponse(html)
+
+    except ProductImage.DoesNotExist:
+        return HttpResponse(f"<h2>ProductImage con ID {image_id} no existe</h2>")
+    except Exception as e:
+        return HttpResponse(f"<h2>Error: {str(e)}</h2>")
+# Add this to your urlpatterns temporarily:
+# path('debug-image/<int:image_id>/', debug_product_image, name='debug_product_image'),
+def faq(request):
+    """FAQ page view"""
+    return render(request, 'faq.html')
+
+def about_us(request):
+    """About Us page view"""
+    return render(request, 'about_us.html')
+def debug_static(request):
+    """Debug static files configuration"""
+
+    debug_info = []
+    debug_info.append(f"STATIC_URL: {settings.STATIC_URL}")
+    debug_info.append(f"STATIC_ROOT: {getattr(settings, 'STATIC_ROOT', 'Not set')}")
+    debug_info.append(f"STATICFILES_DIRS: {getattr(settings, 'STATICFILES_DIRS', 'Not set')}")
+
+    # Check if STATIC_ROOT exists
+    static_root = getattr(settings, 'STATIC_ROOT', None)
+    if static_root:
+        debug_info.append(f"STATIC_ROOT exists: {os.path.exists(static_root)}")
+        if os.path.exists(static_root):
+            debug_info.append(f"STATIC_ROOT contents: {os.listdir(static_root)}")
+
+            # Check for images specifically
+            images_path = os.path.join(static_root, 'images')
+            debug_info.append(f"Images directory exists: {os.path.exists(images_path)}")
+            if os.path.exists(images_path):
+                debug_info.append(f"Images directory contents: {os.listdir(images_path)}")
+
+    # Check current working directory
+    debug_info.append(f"Current working directory: {os.getcwd()}")
+
+    # Test a specific image URL
+    from django.templatetags.static import static
+    try:
+        logo_url = static('images/logo.png')
+        debug_info.append(f"Logo static URL: {logo_url}")
+    except Exception as e:
+        debug_info.append(f"Error generating static URL: {e}")
+
+    html = "<h1>Static Files Debug</h1><pre>" + "\n".join(debug_info) + "</pre>"
+    return HttpResponse(html)

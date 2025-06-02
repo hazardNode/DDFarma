@@ -1,0 +1,41 @@
+{% autoescape off %}
+Hola {{ user.first_name|default:user.email }},
+
+{% if email_type == 'email_confirmation' %}
+Por favor confirma tu dirección de correo electrónico haciendo clic en el enlace de abajo:
+
+{{ activate_url }}
+
+Este enlace expirará en 24 horas.
+
+Si no solicitaste este cambio, por favor ignora este correo.
+
+{% elif email_type == 'email_confirmation_signup' %}
+¡Gracias por registrarte en {{ site_name }}!
+
+Para completar tu registro, por favor confirma tu dirección de correo electrónico haciendo clic en el enlace de abajo:
+
+{{ activate_url }}
+
+Este enlace expirará en 24 horas.
+
+Si no te registraste en nuestro sitio, puedes ignorar este correo.
+
+¡Bienvenido a {{ site_name }}!
+
+{% elif email_type == 'password_reset' %}
+Estás recibiendo este correo porque tú u otra persona ha solicitado restablecer la contraseña de tu cuenta de usuario.
+
+Puedes ignorar este mensaje si no solicitaste restablecer tu contraseña.
+
+Haz clic en el enlace de abajo para restablecer tu contraseña:
+
+{{ password_reset_url }}
+
+Este enlace expirará en 24 horas.
+
+{% endif %}
+
+Gracias por usar {{ site_name }},
+Equipo de {{ site_name }}
+{% endautoescape %}

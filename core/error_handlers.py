@@ -1,4 +1,4 @@
-# Create a new file: core/error_handlers.py
+# core/error_handlers.py
 
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -8,66 +8,96 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def safe_add_message(request, level, message):
+    """
+    Safely add a message, handling cases where messages framework isn't available
+    """
+    try:
+        # Check if request has session and messages middleware is available
+        if (hasattr(request, 'session') and
+            hasattr(request, '_messages') and
+            request.session.session_key):
+
+            if level == 'error':
+                messages.error(request, message)
+            elif level == 'warning':
+                messages.warning(request, message)
+            elif level == 'info':
+                messages.info(request, message)
+            else:
+                messages.info(request, message)
+        else:
+            # If messages aren't available, just log it
+            logger.info(f"Could not add {level} message: {message}")
+    except Exception as e:
+        # If anything goes wrong with messages, just log and continue
+        logger.error(f"Error adding message: {e}")
+
+
 def handler404(request, exception):
     """Custom 404 error handler"""
-    messages.error(request, "Oops! The page you're looking for doesn't exist. You've been redirected to the home page.")
-    logger.warning(f"404 error: {request.path} - User: {request.user}")
+    safe_add_message(request, 'error',
+                    "¡Oops! La página que buscas no existe. Has sido redirigido a la página de inicio.")
+    logger.warning(f"404 error: {request.path} - User: {getattr(request, 'user', 'Anonymous')}")
     return redirect('landing_page')
 
 
 def handler403(request, exception):
     """Custom 403 error handler"""
-    messages.warning(request, "Access denied! You don't have permission to view that page.")
-    logger.warning(f"403 error: {request.path} - User: {request.user}")
+    safe_add_message(request, 'warning',
+                    "¡Acceso denegado! No tienes permisos para ver esa página.")
+    logger.warning(f"403 error: {request.path} - User: {getattr(request, 'user', 'Anonymous')}")
     return redirect('landing_page')
 
 
 def handler500(request):
     """Custom 500 error handler"""
-    messages.error(request,
-                   "Something went wrong on our end. We're working to fix it. You've been redirected to the home page.")
-    logger.error(f"500 error: {request.path} - User: {request.user}")
+    safe_add_message(request, 'error',
+                    "Algo salió mal de nuestro lado. Estamos trabajando para solucionarlo. Has sido redirigido a la página de inicio.")
+    logger.error(f"500 error: {request.path} - User: {getattr(request, 'user', 'Anonymous')}")
     return redirect('landing_page')
 
 
 def handler400(request, exception):
     """Custom 400 error handler"""
-    messages.error(request, "Bad request. The data you sent couldn't be processed.")
-    logger.warning(f"400 error: {request.path} - User: {request.user}")
+    safe_add_message(request, 'error',
+                    "Solicitud incorrecta. Los datos que enviaste no pudieron ser procesados.")
+    logger.warning(f"400 error: {request.path} - User: {getattr(request, 'user', 'Anonymous')}")
     return redirect('landing_page')
 
 
-# Alternative: If you want to handle all errors with one function
-def generic_error_handler(request, status_code, message):
+def generic_error_handler(request, status_code, message=None):
     """Generic error handler for all HTTP errors"""
     error_messages = {
-        400: "Bad request. Please check your input and try again.",
-        401: "Authentication required. Please log in to access this page.",
-        403: "Access denied! You don't have permission to view that page.",
-        404: "Oops! The page you're looking for doesn't exist.",
-        405: "Method not allowed for this page.",
-        429: "Too many requests. Please slow down and try again later.",
-        500: "Something went wrong on our end. We're working to fix it.",
-        502: "Server temporarily unavailable. Please try again later.",
-        503: "Service temporarily unavailable. Please try again later.",
+        400: "Solicitud incorrecta. Por favor verifica tu entrada e intenta de nuevo.",
+        401: "Autenticación requerida. Por favor inicia sesión para acceder a esta página.",
+        403: "¡Acceso denegado! No tienes permisos para ver esa página.",
+        404: "¡Oops! La página que buscas no existe.",
+        405: "Método no permitido para esta página.",
+        429: "Demasiadas solicitudes. Por favor reduce la velocidad e intenta más tarde.",
+        500: "Algo salió mal de nuestro lado. Estamos trabajando para solucionarlo.",
+        502: "Servidor temporalmente no disponible. Por favor intenta más tarde.",
+        503: "Servicio temporalmente no disponible. Por favor intenta más tarde.",
     }
 
-    default_message = "An error occurred. You've been redirected to the home page."
+    default_message = "Ocurrió un error. Has sido redirigido a la página de inicio."
     error_message = error_messages.get(status_code, default_message)
 
     # Add custom message if provided
     if message:
-        error_message = f"{message} You've been redirected to the home page."
+        error_message = f"{message} Has sido redirigido a la página de inicio."
     else:
-        error_message = f"{error_message} You've been redirected to the home page."
+        error_message = f"{error_message} Has sido redirigido a la página de inicio."
 
-    # Choose message type based on error code
+    # Choose message type and level based on error code
     if status_code in [500, 502, 503]:
-        messages.error(request, error_message)
+        message_level = 'error'
     elif status_code in [401, 403]:
-        messages.warning(request, error_message)
+        message_level = 'warning'
     else:
-        messages.info(request, error_message)
+        message_level = 'info'
 
-    logger.warning(f"{status_code} error: {request.path} - User: {request.user}")
+    safe_add_message(request, message_level, error_message)
+    logger.warning(f"{status_code} error: {request.path} - User: {getattr(request, 'user', 'Anonymous')}")
+
     return redirect('landing_page')
